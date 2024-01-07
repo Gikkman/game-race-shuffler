@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "name": "coordinator",
+  "packageManager": "yarn@4.0.2"
+}
