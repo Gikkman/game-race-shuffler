@@ -1,18 +1,19 @@
 {
-  "private": true,
   "name": "game-race-shuffler",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rimraf --glob **/.tsbuildinfo **/dist",
+    "build": "tsc --build --verbose"
   },
+  "keywords": [],
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Gikkman/game-race-shuffler.git"
   },
   "author": "Gikkman",
-  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/Gikkman/game-race-shuffler/issues"
   },
@@ -22,10 +23,14 @@
     "@typescript-eslint/parser": "^6.18.0",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.19.2",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
   },
-  "packageManager": "yarn@4.0.2",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  }
 }
