@@ -2,10 +2,10 @@
   "name": "game-race-shuffler",
   "version": "1.0.0",
   "private": true,
-  "type": "commonjs",
   "scripts": {
     "clean": "rimraf --glob **/.tsbuildinfo **/dist",
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "prebuild": "npm run --workspaces --if-present prebuild"
   },
   "keywords": [],
   "license": "AGPL-3.0",

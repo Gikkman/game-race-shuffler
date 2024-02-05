@@ -1,0 +1,17 @@
+{
+  "bizhawk": "N:/Program_P/_Emulators/Bizhawk 2.6/EmuHawk.exe",
+  "games": [
+    {
+      "index": 0,
+      "path": "W:/Games/Nintendo - Nintendo Entertainment System [nes]/Snake Rattle n Roll (USA).nes"
+    },
+    {
+      "index": 1,
+      "path": "W:/Games/Nintendo - Nintendo Entertainment System [nes]/StarTropics (USA).nes"
+    },
+    {
+      "index": 2,
+      "path": "W:/Games/Nintendo - Nintendo Entertainment System [nes]/Super Mario Bros. (World).nes"
+    }
+  ]
+}

@@ -4,6 +4,6 @@
     { "path": "./packages/client"},
     { "path": "./packages/coordinator"},
     { "path": "./packages/server"},
-    { "path": "./packages/types"},
+    { "path": "./packages/shared"},
   ]
 }

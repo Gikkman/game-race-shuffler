@@ -6,6 +6,12 @@
     "build": "tsc --build --verbose"
   },
   "dependencies": {
-    "@grs/types": "^1.0.0"
+    "@grs/shared": "^1.0.0",
+    "fastify": "^4.26.0",
+    "tipc": "^1.0.5",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5"
   }
 }
