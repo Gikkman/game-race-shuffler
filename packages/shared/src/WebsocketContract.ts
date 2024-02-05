@@ -1,4 +1,4 @@
-export default interface WebsocketContract {
+export interface WebsocketContract {
   connect: string,
   disconnect: string,
   s: string,

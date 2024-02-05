@@ -1,6 +1,6 @@
 import Fastify, { RouteHandlerMethod } from 'fastify';
-import { TipcNodeClient } from 'tipc';
-import WebsocketContract from '@grs/shared/'
+import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
+import { WebsocketContract } from '@grs/shared'
 
 let initialized = false;
 const fastify = Fastify({
@@ -11,6 +11,7 @@ const tipcFactory = TipcNodeClient.create({
   port: 8080,
   loggerOptions: fastify.log
 })
+let tipcNsClient: TipcNamespaceClient<WebsocketContract>;
 
 export async function init() {
   if (initialized) return
@@ -20,7 +21,7 @@ export async function init() {
     // Start server
     await fastify.listen({ port: 47911 });
     const tipcClient = await tipcFactory.connect()
-    tipcClient.forContractAndNamespace<WebsocketContract>("ns")
+    tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns")
 
     // Setup shutdown hooks for the server
     process.on("beforeExit", () => {
@@ -42,4 +43,6 @@ export function bindPost(path: string, callback: RouteHandlerMethod) {
   fastify.post(path, callback);
 }
 
-export function
+export function tipc() {
+  return tipcNsClient;
+}
