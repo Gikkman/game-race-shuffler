@@ -13,10 +13,11 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
     parser: "@typescript-eslint/parser",
-    sourceType: "module"
+    sourceType: "module",
+    project: "packages/**/tsconfig.json"
   },
 
-  ignorePatterns: ["_compile/**/*"],
+  ignorePatterns: ["dist"],
 
   rules: {
     "@typescript-eslint/no-unused-vars": [

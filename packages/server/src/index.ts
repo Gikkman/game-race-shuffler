@@ -1,7 +1,7 @@
-import * as Server from './Server'
-import { say } from "@grs/shared";
+import * as Server from './Server';
+import { PathUtils } from "@grs/shared";
 async function main() {
   Server.init();
 }
-main()
-say()
+main();
+PathUtils.init(__dirname);

@@ -4,10 +4,6 @@
   "main": "./dist/index.js",
   "private": true,
   "scripts": {
-    "build": "tsc --build --verbose",
-    "prebuild": "barrelsby -d ./src -e index.ts -D"
-  },
-  "devDependencies": {
-    "barrelsby": "^2.8.1"
+    "build": "tsc --build --verbose"
   }
 }

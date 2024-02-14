@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "clean": "rimraf --glob **/.tsbuildinfo **/dist",
+    "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "build": "tsc --build --verbose",
-    "prebuild": "npm run --workspaces --if-present prebuild"
+    "prebuild": "npm run --workspaces --if-present prebuild",
+    "start": "npm run --workspace packages/client start"
   },
   "keywords": [],
   "license": "AGPL-3.0",

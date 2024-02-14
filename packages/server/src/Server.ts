@@ -11,7 +11,9 @@ const wss = new WebSocket.Server({
 
 
 export async function init() {
-  if (initialized) return
+  if (initialized) {
+    return;
+  }
   initialized = true;
 
   try {
@@ -32,7 +34,8 @@ export async function init() {
 
     await fastify.listen({ port: 47911 });
 
-  } catch (err) {
+  }
+  catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
