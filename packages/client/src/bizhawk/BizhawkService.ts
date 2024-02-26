@@ -14,7 +14,7 @@ type BizhawkEvent = {
 }
 
 type GameData = {
-  absoluteFilePath: string;
+  absolutePath: string;
   name: string;
 }
 
@@ -32,7 +32,7 @@ enum BizhawkAction {
  *  Variables
  ************************************************************************/
 const LOGGER = Logger.getLogger("Bizhawk");
-const BLANK_GAME: GameData = {name: "No Game", absoluteFilePath: ""};
+const BLANK_GAME: GameData = {name: "No Game", absolutePath: ""};
 const QUEUE: BizhawkEvent[] = [];
 
 let bizhawkProc: ChildProcess.ChildProcess | undefined;
@@ -62,9 +62,9 @@ export function unmuteBizhawk() {
 }
 
 export function loadGame(game: GameData) {
-  LOGGER.info("Load request. Game: ", game.absoluteFilePath);
+  LOGGER.info("Load request. Game: ", game.absolutePath);
   internalLoadGame(game).then(() => {
-    LOGGER.info("Game loaded: ", game.absoluteFilePath);
+    LOGGER.info("Game loaded: ", game.absolutePath);
   });
 }
 
@@ -104,12 +104,12 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
     return;
   }
   else {
-    LOGGER.info("Loading game: ", newGame.absoluteFilePath);
+    LOGGER.info("Loading game: ", newGame.absolutePath);
   }
   muteBizhawk();
   saveStateIfRunning(currentGame);
   await FunctionUtils.sleep(500);
-  pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absoluteFilePath);
+  pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absolutePath);
   await FunctionUtils.sleep(500);
   loadStateIfExists(newGame);
   unmuteBizhawk();
@@ -186,14 +186,15 @@ function intenalLaunchBizhawk() {
     const proc = ChildProcess.spawn(bizhawkPath, params, { windowsHide: true, env: process.env, cwd: bizhawkCwd });
 
     proc.stdout.on('data', (data) => {
-      // bizhawkLog(launchTime, data.toString('utf8'));
+      LOGGER.debug(`BIZHAWK [%s] %s`,launchTime, data.toString('utf8'));
     });
 
     proc.stderr.on('data', (data) => {
-      // bizhawkLog(launchTime, data.toString('utf8'));
+      LOGGER.debug(`BIZHAWK [%s] %s`,launchTime, data.toString('utf8'));
     });
 
     proc.on('close', (code, signal) => {
+      LOGGER.debug(`BIZHAWK [%s] Bizhawk closed with code: %n signal: %s`, launchTime, code, signal);
       // bizhawkLog(launchTime, `Bizhawk closed with ${Number.isInteger(code) ? 'code: ' + code : 'signal: ' + signal}`);
     });
 
@@ -201,13 +202,13 @@ function intenalLaunchBizhawk() {
       if (!launched) {
         return;
       }
+      LOGGER.debug(`BIZHAWK [%s] Exited Bizhawk with code: %n signal: %s`, launchTime, code, signal);
       // bizhawkLog(launchTime, "Exited Bizhawk");
       cleanupBizhawk();
     });
 
     proc.on('error', (e) => {
-      LOGGER.error("Bizhawk ran in to an error", e);
-      // bizhawkLog(launchTime, err);
+      LOGGER.debug(`BIZHAWK [%s] Bizhawk ran in to an error,`,launchTime, e);
 
       if (!launched) {
         return;
@@ -216,7 +217,7 @@ function intenalLaunchBizhawk() {
     });
 
     bizhawkProc = proc;
-    // bizhawkLog(launchTime, "Started Bizhawk", bizhawkPath, ...params)
+    LOGGER.debug(`BIZHAWK [%s] Started Bizhawk: %s`, launchTime, bizhawkPath);
   }
   catch (e) {
     LOGGER.error("Starting Bizhawk failed: %s", e);
@@ -235,7 +236,7 @@ function cleanupBizhawk() {
 }
 
 function hashGame(game: GameData) {
-  return crypto.createHash('md5').update(game.absoluteFilePath).digest('hex');
+  return crypto.createHash('md5').update(game.absolutePath).digest('hex');
 }
 
 /************************************************************************
@@ -272,7 +273,7 @@ export function bizhawkPong() {
 
 async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, process: ChildProcess.ChildProcess) {
   restartCycleCount++;
-  LOGGER.error("Bizhawk failed health check after loading game " + game.absoluteFilePath);
+  LOGGER.error("Bizhawk failed health check after loading game " + game.absolutePath);
 
   LOGGER.warn("Removing save state");
   deleteStateIfExists(game);
@@ -282,7 +283,7 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   process.on('close', () => {
     setImmediate(() => {
       if (restartCycleCount > 3) {
-        LOGGER.error("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absoluteFilePath);
+        LOGGER.error("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absolutePath);
         return;
       }
       LOGGER.info("Relauncing bizhawk. Attempt: " + restartCycleCount);

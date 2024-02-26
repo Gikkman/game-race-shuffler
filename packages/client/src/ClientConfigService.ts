@@ -45,6 +45,7 @@ export type ClientConfig = {
   games: {
     index: number,
     path: string,
+    name: string,
   }[]
 }
 
@@ -75,7 +76,7 @@ function isClientConfig(obj: unknown): obj is ClientConfig {
       throw new Error(`Game element at index ${idx} in client-config.json is not an object`);
     }
 
-    const {path, index} = game as { path: unknown, index: unknown };
+    const {path, index, name} = game as { path: unknown, index: unknown, name: unknown };
     if(typeof index !== 'number') {
       throw new Error(`Property 'index' of game ${idx} in client-config.json is not a number`);
     }
@@ -84,6 +85,9 @@ function isClientConfig(obj: unknown): obj is ClientConfig {
     }
     if(!PathUtils.existsSync(path)) {
       throw new Error(`The 'path' property of game ${idx} in client-config.json does not resolve to a file: ${path}`);
+    }
+    if(typeof name !== 'string') {
+      throw new Error(`Property 'name' of game ${idx} in client-config.json is not a string`);
     }
   });
 

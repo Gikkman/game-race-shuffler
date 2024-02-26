@@ -1,12 +1,9 @@
-import Fastify, { RouteHandlerMethod } from 'fastify';
+import Fastify, { RouteHandlerMethod} from 'fastify';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
 import { WebsocketContract, Logger } from '@grs/shared';
 
-
 let initialized = false;
-const fastify = Fastify({
-  logger: true,
-});
+const fastify = Fastify();
 
 const TIPC_LOGGER = Logger.getLogger("TIPC");
 const tipcFactory = TipcNodeClient.create({
