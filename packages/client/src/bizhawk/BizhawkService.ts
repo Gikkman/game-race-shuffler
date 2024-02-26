@@ -206,7 +206,7 @@ function intenalLaunchBizhawk() {
     });
 
     proc.on('error', (e) => {
-      LOGGER.err("Bizhawk ran in to an error", e);
+      LOGGER.error("Bizhawk ran in to an error", e);
       // bizhawkLog(launchTime, err);
 
       if (!launched) {
@@ -219,7 +219,7 @@ function intenalLaunchBizhawk() {
     // bizhawkLog(launchTime, "Started Bizhawk", bizhawkPath, ...params)
   }
   catch (e) {
-    LOGGER.err("Starting Bizhawk failed: %s", e);
+    LOGGER.error("Starting Bizhawk failed: %s", e);
     cleanupBizhawk();
   }
 }
@@ -272,7 +272,7 @@ export function bizhawkPong() {
 
 async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, process: ChildProcess.ChildProcess) {
   restartCycleCount++;
-  LOGGER.err("Bizhawk failed health check after loading game " + game.absoluteFilePath);
+  LOGGER.error("Bizhawk failed health check after loading game " + game.absoluteFilePath);
 
   LOGGER.warn("Removing save state");
   deleteStateIfExists(game);
@@ -282,7 +282,7 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   process.on('close', () => {
     setImmediate(() => {
       if (restartCycleCount > 3) {
-        LOGGER.err("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absoluteFilePath);
+        LOGGER.error("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absoluteFilePath);
         return;
       }
       LOGGER.info("Relauncing bizhawk. Attempt: " + restartCycleCount);

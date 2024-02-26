@@ -1,16 +1,25 @@
 import Fastify, { RouteHandlerMethod } from 'fastify';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
 import { WebsocketContract } from '@grs/shared';
+import { getLogger } from '@grs/shared/src/Logger';
+
 
 let initialized = false;
 const fastify = Fastify({
   logger: true,
 });
 
+const TIPC_LOGGER = getLogger("TIPC");
 const tipcFactory = TipcNodeClient.create({
   address: "localhost",
   port: 8080,
-  loggerOptions: fastify.log
+  loggerOptions: {
+    debug: TIPC_LOGGER.debug,
+    info: TIPC_LOGGER.info,
+    warn: TIPC_LOGGER.warn,
+    error: TIPC_LOGGER.error,
+    logLevel: TIPC_LOGGER.getLogLevel(),
+  }
 });
 
 let tipcNsClient: TipcNamespaceClient<WebsocketContract>;

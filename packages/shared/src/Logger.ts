@@ -31,38 +31,42 @@ class Logger {
   }
 
   debug(message: string, ...rest: unknown[]) {
-    if(LEVEL > LOG_LEVEL.DEBUG) {
+    if (LEVEL > LOG_LEVEL.DEBUG) {
       return;
     }
     this.logPrint(LOG_LEVEL.DEBUG, message, rest);
   }
 
   info(message: string, ...rest: unknown[]) {
-    if(LEVEL > LOG_LEVEL.INFO) {
+    if (LEVEL > LOG_LEVEL.INFO) {
       return;
     }
     this.logPrint(LOG_LEVEL.INFO, message, rest);
   }
 
   warn(message: string, ...rest: unknown[]) {
-    if(LEVEL > LOG_LEVEL.WARN) {
+    if (LEVEL > LOG_LEVEL.WARN) {
       return;
     }
     this.logPrint(LOG_LEVEL.WARN, message, rest);
   }
 
-  err(message: string|Error, ...rest: unknown[]) {
-    if(LEVEL > LOG_LEVEL.ERROR) {
+  error(message: string | Error, ...rest: unknown[]) {
+    if (LEVEL > LOG_LEVEL.ERROR) {
       return;
     }
     this.logPrint(LOG_LEVEL.ERROR, message, rest);
   }
 
-  private logPrint(minLevel: LOG_LEVEL, message: string|Error, rest: unknown[]) {
-    if(LEVEL > minLevel) {
+  getLogLevel() {
+    return logLevelToStr(LEVEL);
+  }
+
+  private logPrint(minLevel: LOG_LEVEL, message: string | Error, rest: unknown[]) {
+    if (LEVEL > minLevel) {
       return;
     }
-    if(typeof message === "object" || Array.isArray(message)) {
+    if (typeof message === "object" || Array.isArray(message)) {
       console.log(`[${logLevelToStr(minLevel)}] (${this.name})`, message, ...rest);
     }
     else {
@@ -73,23 +77,23 @@ class Logger {
 
 
 function logLevelToStr(level: LOG_LEVEL) {
-  switch(level) {
+  switch (level) {
   case LOG_LEVEL.DEBUG: return "DEBUG";
   case LOG_LEVEL.INFO: return "INFO";
   case LOG_LEVEL.WARN: return "WARN";
   case LOG_LEVEL.ERROR: return "ERROR";
-  default: return "";
+  case LOG_LEVEL.OFF: return "OFF";
   }
 }
 
 function calculateLogLevel(): LOG_LEVEL {
   return tryLogLevel(process.env["LOGLEVEL"])
-        ?? tryLogLevel(process.env["LOG_LEVEL"])
-        ?? LOG_LEVEL.INFO;
+    ?? tryLogLevel(process.env["LOG_LEVEL"])
+    ?? LOG_LEVEL.INFO;
 }
 
 function tryLogLevel(str?: string) {
-  switch(str?.toUpperCase()) {
+  switch (str?.toUpperCase()) {
   case "DEBUG": return LOG_LEVEL.DEBUG;
   case "INFO": return LOG_LEVEL.INFO;
   case "WARN": return LOG_LEVEL.WARN;
