@@ -1,9 +1,13 @@
-import Fastify, { RouteHandlerMethod} from 'fastify';
+import express from 'express';
+import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
 import { WebsocketContract, Logger } from '@grs/shared';
 
 let initialized = false;
-const fastify = Fastify();
+const LOGGER = Logger.getLogger("Server");
+const server = express();
+const port = 47911;
+
 
 const TIPC_LOGGER = Logger.getLogger("TIPC");
 const tipcFactory = TipcNodeClient.create({
@@ -28,29 +32,36 @@ export async function init() {
 
   try {
     // Start server
-    await fastify.listen({ port: 47911 });
-    const tipcClient = await tipcFactory.connect();
-    tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
+    const serverHandle = server.listen(port, () => {
+      LOGGER.info("Listening on " + port);
+    });
+    // const tipcClient = await tipcFactory.connect();
+    // tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
 
     // Setup shutdown hooks for the server
     process.on("beforeExit", () => {
-      fastify.close();
-      tipcClient.shutdown();
+      LOGGER.debug("Shutting down in a controlled manner");
+      serverHandle.close();
+      // tipcClient.shutdown();
     });
 
   }
   catch (err) {
-    fastify.log.error(err);
+    LOGGER.error(err as Error);
     process.exit(1);
   }
 }
 
-export function bindGet(path: string, callback: RouteHandlerMethod) {
-  fastify.get(path, callback);
+export function bindGet(url: string, callback: express.RequestHandler) {
+  server.get(url, (req, res, next) => {
+    callback(req, res, next);
+  });
 }
 
-export function bindPost(path: string, callback: RouteHandlerMethod) {
-  fastify.post(path, callback);
+export function bindPost(url: string, callback: RequestHandler) {
+  server.post(url, (req, res, next) => {
+    callback(req, res, next);
+  });
 }
 
 export function tipc() {

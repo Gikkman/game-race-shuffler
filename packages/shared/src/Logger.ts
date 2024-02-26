@@ -28,6 +28,12 @@ class Logger {
   private name: string;
   constructor(name: string) {
     this.name = name;
+
+    // Bind log methods to the instance to ensure the correct `this` context
+    this.debug = this.debug.bind(this);
+    this.info = this.info.bind(this);
+    this.warn = this.warn.bind(this);
+    this.error = this.error.bind(this);
   }
 
   debug(message: string, ...rest: unknown[]) {

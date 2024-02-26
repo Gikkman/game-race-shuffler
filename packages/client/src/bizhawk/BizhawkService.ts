@@ -31,7 +31,8 @@ enum BizhawkAction {
 /************************************************************************
  *  Variables
  ************************************************************************/
-const LOGGER = Logger.getLogger("Bizhawk");
+const LOGGER = Logger.getLogger("BizhawkService");
+const BIZ_LOGGER = Logger.getLogger("Bizhawk.exe");
 const BLANK_GAME: GameData = {name: "No Game", absolutePath: ""};
 const QUEUE: BizhawkEvent[] = [];
 
@@ -181,20 +182,20 @@ function intenalLaunchBizhawk() {
     const bizhawkPath = getBizhawkPath();
     const bizhawkCwd = path.dirname(bizhawkPath);
     const luaPath = getLuaPath();
-    const params = ["--lua=" + luaPath, "--url_get=localhost:47911/bizhawk"];
+    const params = ["--lua=" + luaPath, "--url_get=true", "--url_post=true"];
 
     const proc = ChildProcess.spawn(bizhawkPath, params, { windowsHide: true, env: process.env, cwd: bizhawkCwd });
 
     proc.stdout.on('data', (data) => {
-      LOGGER.debug(`BIZHAWK [%s] %s`,launchTime, data.toString('utf8'));
+      BIZ_LOGGER.debug(`[%s] %s`,launchTime, data.toString('utf8'));
     });
 
     proc.stderr.on('data', (data) => {
-      LOGGER.debug(`BIZHAWK [%s] %s`,launchTime, data.toString('utf8'));
+      BIZ_LOGGER.debug(`[%s] %s`,launchTime, data.toString('utf8'));
     });
 
     proc.on('close', (code, signal) => {
-      LOGGER.debug(`BIZHAWK [%s] Bizhawk closed with code: %n signal: %s`, launchTime, code, signal);
+      BIZ_LOGGER.debug(`[%s] Bizhawk closed with code: %d signal: %s`, launchTime, code, signal);
       // bizhawkLog(launchTime, `Bizhawk closed with ${Number.isInteger(code) ? 'code: ' + code : 'signal: ' + signal}`);
     });
 
@@ -202,13 +203,13 @@ function intenalLaunchBizhawk() {
       if (!launched) {
         return;
       }
-      LOGGER.debug(`BIZHAWK [%s] Exited Bizhawk with code: %n signal: %s`, launchTime, code, signal);
+      BIZ_LOGGER.debug(`[%s] Exited Bizhawk with code: %d signal: %s`, launchTime, code, signal);
       // bizhawkLog(launchTime, "Exited Bizhawk");
       cleanupBizhawk();
     });
 
     proc.on('error', (e) => {
-      LOGGER.debug(`BIZHAWK [%s] Bizhawk ran in to an error,`,launchTime, e);
+      BIZ_LOGGER.debug(`[%s] Bizhawk ran in to an error,`,launchTime, e);
 
       if (!launched) {
         return;
@@ -217,7 +218,7 @@ function intenalLaunchBizhawk() {
     });
 
     bizhawkProc = proc;
-    LOGGER.debug(`BIZHAWK [%s] Started Bizhawk: %s`, launchTime, bizhawkPath);
+    BIZ_LOGGER.debug(`[%s] Started Bizhawk: %s`, launchTime, bizhawkPath);
   }
   catch (e) {
     LOGGER.error("Starting Bizhawk failed: %s", e);
@@ -226,7 +227,7 @@ function intenalLaunchBizhawk() {
 }
 
 function getLuaPath() {
-  return PathUtils.pathRelativeToWorkspaceRoot("lua", "random-rom.lua");
+  return PathUtils.pathRelativeToWorkspaceRoot("lua", "bizhawk-client.lua");
 }
 
 function cleanupBizhawk() {

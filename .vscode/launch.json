@@ -5,19 +5,15 @@
       "name": "Run Client",
       "type": "node",
       "request": "launch",
-
       "cwd": "${workspaceFolder}/packages/client",
-      "runtimeArgs": [
-          "-r",
-          "ts-node/register"
-      ],
       "args": [
-          "src/index.ts"
+          "dist/index.js"
       ],
       "env": {
-        "TS_NODE_PROJECT": "tsconfig.json"
+        "LOGLEVEL": "debug"
       },
-      "outputCapture": "std"
+      "outputCapture": "std",
+      "preLaunchTask": "npm: build"
   }
   ]
 }

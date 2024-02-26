@@ -39,7 +39,7 @@ export function pathRelativeToProjectRoot(...segments: string[]) {
   return path.join(projectRoot, ...segments);
 }
 
-export function pathRelativeToWorkspaceRoot(callerPath: string, ...segments: string[]) {
+export function pathRelativeToWorkspaceRoot(...segments: string[]) {
   checkInitialized();
   return path.join(workspaceRoot, ...segments);
 }

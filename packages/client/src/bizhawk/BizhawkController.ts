@@ -13,6 +13,7 @@ export function init() {
   initialized = true;
 
   bindGet("/bizhawk", (_, res) => {
+    LOGGER.debug("GET -> /bizhawk");
     const event = BizhawkService.peekBizhawkEventQueue();
     if (event) {
       const str = event.action + ":" + (event.path ? event.path : "");
@@ -20,21 +21,24 @@ export function init() {
       res.send(str);
     }
     else {
-      res.send();
+      res.send("");
     }
   });
 
-  bindPost("/bizhawk", (_, res) => {
-    const event = BizhawkService.popBizhawkEventQueue();
-    res.send(event);
+  bindPost("/bizhawk/ack", (_, res) => {
+    LOGGER.debug("POST -> /bizhawk/ack");
+    BizhawkService.popBizhawkEventQueue();
+    res.send("");
   });
 
   bindPost("/bizhawk/pong", (_, res) => {
+    LOGGER.debug("POST -> /bizhawk/pong");
     BizhawkService.bizhawkPong();
-    res.send();
+    res.send("");
   });
 
   bindPost("/load/:id", (req, res) => {
+    LOGGER.debug("POST -> /bizhawk/:id");
     const params = req.params as {id?: number};
     const num = params.id;
 
@@ -46,6 +50,20 @@ export function init() {
       return res.status(400).send("Invalid number. Must be greater than 0");
     }
     const gameConfig = getClientConfig().games[num];
+    if(!gameConfig) {
+      return res.status(400).send("Invalid number. Can't be greater than the number of games");
+    }
+
+    BizhawkService.loadGame({absolutePath: gameConfig.path, name: gameConfig.name});
+    return res.send("OK");
+  });
+
+  bindPost("/random", (req, res) => {
+    LOGGER.debug("POST -> /random");
+
+    const gameConfigs = getClientConfig().games;
+    const idx = Math.floor(Math.random() * gameConfigs.length);
+    const gameConfig = gameConfigs[idx];
     if(!gameConfig) {
       return res.status(400).send("Invalid number. Can't be greater than the number of games");
     }

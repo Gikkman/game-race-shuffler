@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "clean": "rimraf --glob **/.tsbuildinfo **/dist",
+    "clean": "rimraf --glob packages/**/tsconfig.tsbuildinfo packages/**/dist",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "build": "tsc --build --verbose",
     "prebuild": "npm run --workspaces --if-present prebuild",
