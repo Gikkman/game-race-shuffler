@@ -6,7 +6,6 @@ import { WebsocketContract, Logger } from '@grs/shared';
 let initialized = false;
 const LOGGER = Logger.getLogger("Server");
 const server = express();
-const port = 47911;
 
 
 const TIPC_LOGGER = Logger.getLogger("TIPC");
@@ -32,9 +31,8 @@ export async function init() {
 
   try {
     // Start server
-    const serverHandle = server.listen(port, () => {
-      LOGGER.info("Listening on " + port);
-    });
+    const serverHandle = server.listen(47911, "127.0.0.1");
+    LOGGER.info(`Listening on http://127.0.0.1:47911`);
     // const tipcClient = await tipcFactory.connect();
     // tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
 
