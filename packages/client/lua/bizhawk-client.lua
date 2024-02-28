@@ -1,5 +1,12 @@
-local url = "http://127.0.0.1:47911/bizhawk"
+local port = comm.httpGetGetUrl()
+local url = "http://127.0.0.1:" .. port .. "/bizhawk"
 local frameCount = 0
+
+print("Server address: " .. url)
+
+event.onframeend( function()
+  frameCount = frameCount + 1
+end )
 
 function request()
     local res = comm.httpGet(url)
@@ -8,7 +15,7 @@ function request()
     end
 
     local action = string.sub(res, 1, 4)
-    print("Action: " .. action)
+    print("Action: " .. action .. " at frame " .. frameCount)
 
     local path = string.sub(res, 6)
     if(path ~= '') then
@@ -37,10 +44,8 @@ end
 
 while true do
     if (math.fmod(frameCount, 6) == 0) then
-        frameCount = 0
         request()
     end
 
     emu.frameadvance()
-    frameCount = frameCount + 1
 end

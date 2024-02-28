@@ -1,17 +1,23 @@
 import express from 'express';
+import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
 import { WebsocketContract, Logger } from '@grs/shared';
+import { AddressInfo } from 'ws';
 
+/************************************************************************
+ *  Variables
+ ************************************************************************/
 let initialized = false;
 const LOGGER = Logger.getLogger("Server");
-const server = express();
+const app = express();
+let server: Server;
 
 
-const TIPC_LOGGER = Logger.getLogger("TIPC");
+const TIPC_LOGGER = Logger.getLogger();
 const tipcFactory = TipcNodeClient.create({
-  address: "localhost",
-  port: 8080,
+  address: "127.0.0.1",
+  port: 47911,
   loggerOptions: {
     debug: TIPC_LOGGER.debug,
     info: TIPC_LOGGER.info,
@@ -23,45 +29,105 @@ const tipcFactory = TipcNodeClient.create({
 
 let tipcNsClient: TipcNamespaceClient<WebsocketContract>;
 
+/************************************************************************
+ *  Module Functions
+ ************************************************************************/
+
 export async function init() {
   if (initialized) {
     return;
   }
-  initialized = true;
 
-  try {
-    // Start server
-    const serverHandle = server.listen(47911, "127.0.0.1");
-    LOGGER.info(`Listening on http://127.0.0.1:47911`);
-    // const tipcClient = await tipcFactory.connect();
-    // tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
+  const tipcClient = await tipcFactory.connect();
+  tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
 
-    // Setup shutdown hooks for the server
-    process.on("beforeExit", () => {
-      LOGGER.debug("Shutting down in a controlled manner");
-      serverHandle.close();
-      // tipcClient.shutdown();
-    });
+  const promise = new Promise<void>((res) => {
+    try {
+      // Start server
+      server = app.listen(0, "127.0.0.1");
+      server.on("listening", () => {
+        const addr = server.address() as AddressInfo;
+        console.log("Server started. Listening on http://" + addr.address + ":" + addr.port);
+        res();
+      });
+      server.on("error", onError);
 
-  }
-  catch (err) {
-    LOGGER.error(err as Error);
-    process.exit(1);
-  }
+      // Setup shutdown hooks for the server
+      process.on("beforeExit", () => {
+        initialized = false;
+        LOGGER.debug("Shutting down in a controlled manner");
+        server?.close();
+        tipcClient?.shutdown();
+      });
+
+    }
+    catch (err) {
+      LOGGER.error(err as Error);
+      process.exit(1);
+    }
+    initialized = true;
+  });
+
+  return promise;
 }
 
 export function bindGet(url: string, callback: express.RequestHandler) {
-  server.get(url, (req, res, next) => {
+  ensureInitialized();
+  app.get(url, (req, res, next) => {
     callback(req, res, next);
   });
 }
 
 export function bindPost(url: string, callback: RequestHandler) {
-  server.post(url, (req, res, next) => {
+  ensureInitialized();
+  app.post(url, (req, res, next) => {
     callback(req, res, next);
   });
 }
 
 export function tipc() {
+  ensureInitialized();
   return tipcNsClient;
+}
+
+export function getAddress() {
+  ensureInitialized();
+  return server.address() as AddressInfo;
+}
+
+/************************************************************************
+ *  Internal functions
+ ************************************************************************/
+function onError(err: unknown) {
+  const error = err as {syscall: string, code: string};
+  const address = getAddress();
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof address.port === 'string'
+    ? 'pipe ' + address.port
+    : 'port ' + address.port;
+
+  switch (error.code) {
+  case 'EACCES':
+    console.error(bind + ' requires elevated privileges');
+    process.exit(1);
+    break;
+  case 'EADDRINUSE':
+    console.error(bind + ' is already in use');
+    process.exit(1);
+    break;
+  case 'ECONNRESET':
+    console.error('Socket hang up');
+    break;
+  default:
+    throw error;
+  }
+}
+
+function ensureInitialized() {
+  if(!initialized) {
+    throw new Error("Module is not initialized: " + module.filename);
+  }
 }

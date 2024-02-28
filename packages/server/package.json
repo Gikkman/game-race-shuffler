@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc --build --verbose"
+    "build": "tsc --build",
+    "start": "node ./dist/index.js"
   },
   "dependencies": {
     "@grs/shared": "^1.0.0",

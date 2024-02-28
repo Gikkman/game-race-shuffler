@@ -1,4 +1,4 @@
-import { bindGet, bindPost } from './WebServer';
+import { bindGet, bindPost, tipc } from './WebServer';
 import * as BizhawkService from './BizhawkService';
 import { Logger } from '@grs/shared';
 import { getClientConfig } from '../ClientConfigService';
@@ -10,7 +10,6 @@ export function init() {
   if (initialized) {
     return;
   }
-  initialized = true;
 
   bindGet("/bizhawk", (_, res) => {
     LOGGER.debug("GET -> /bizhawk");
@@ -71,4 +70,19 @@ export function init() {
     BizhawkService.loadGame({absolutePath: gameConfig.path, name: gameConfig.name});
     return res.send("OK");
   });
+
+  tipc().addListener("loadGame", (num) => {
+    LOGGER.debug("TIPC request on 'loadGame'");
+    if (num < 0) {
+      return LOGGER.error("Argument 'num' is less than 0");
+    }
+    const gameConfig = getClientConfig().games[num];
+    if(!gameConfig) {
+      return LOGGER.error("Argument 'num' doesn't map against a game index");
+    }
+
+    BizhawkService.loadGame({absolutePath: gameConfig.path, name: gameConfig.name});
+  });
+
+  initialized = true;
 }

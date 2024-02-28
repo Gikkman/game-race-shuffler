@@ -7,7 +7,7 @@ enum LOG_LEVEL {
 }
 const LEVEL = calculateLogLevel();
 
-export function getLogger(name: string) {
+export function getLogger(name?: string) {
   return new Logger(name);
 }
 
@@ -25,9 +25,9 @@ export function getLogger(name: string) {
  * ```
  */
 class Logger {
-  private name: string;
-  constructor(name: string) {
-    this.name = name;
+  private nameStr?: string;
+  constructor(name?: string) {
+    this.nameStr = name ? ` (${name})` : "";
 
     // Bind log methods to the instance to ensure the correct `this` context
     this.debug = this.debug.bind(this);
@@ -73,10 +73,10 @@ class Logger {
       return;
     }
     if (typeof message === "object" || Array.isArray(message)) {
-      console.log(`[${logLevelToStr(minLevel)}] (${this.name})`, message, ...rest);
+      console.log(`[${logLevelToStr(minLevel)}]${this.nameStr}`, message, ...rest);
     }
     else {
-      console.log(`[${logLevelToStr(minLevel)}] (${this.name}) ${message}`, ...rest);
+      console.log(`[${logLevelToStr(minLevel)}]${this.nameStr} ${message}`, ...rest);
     }
   }
 }

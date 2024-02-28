@@ -39,6 +39,8 @@ const QUEUE: BizhawkEvent[] = [];
 let bizhawkProc: ChildProcess.ChildProcess | undefined;
 let healthCheckTimeout: NodeJS.Timeout | undefined;
 
+let bizhawkCallPort: number;
+
 const saveStateExtension = ".State";
 /************************************************************************
  *  Export
@@ -91,7 +93,8 @@ export function popBizhawkEventQueue(): BizhawkEvent | undefined {
   return QUEUE.shift();
 }
 
-export function launchBizhawk() {
+export function launchBizhawk(serverPort: number) {
+  bizhawkCallPort = serverPort;
   intenalLaunchBizhawk();
 }
 
@@ -109,9 +112,9 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
   }
   muteBizhawk();
   saveStateIfRunning(currentGame);
-  await FunctionUtils.sleep(500);
+  await FunctionUtils.sleep(16*5);
   pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absolutePath);
-  await FunctionUtils.sleep(500);
+  await FunctionUtils.sleep(16*5);
   loadStateIfExists(newGame);
   unmuteBizhawk();
 
@@ -178,11 +181,12 @@ function intenalLaunchBizhawk() {
 
   launched = true;
   launchTime = new Date();
+
   try {
     const bizhawkPath = getBizhawkPath();
     const bizhawkCwd = path.dirname(bizhawkPath);
     const luaPath = getLuaPath();
-    const params = ["--lua=" + luaPath, "--url_get=true", "--url_post=true"];
+    const params = ["--lua=" + luaPath, `--url_get=${bizhawkCallPort}`];
 
     const proc = ChildProcess.spawn(bizhawkPath, params, { windowsHide: true, env: process.env, cwd: bizhawkCwd });
 

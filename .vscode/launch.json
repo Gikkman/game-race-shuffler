@@ -14,6 +14,20 @@
       },
       "outputCapture": "std",
       "preLaunchTask": "npm: build"
-  }
+  },
+  {
+    "name": "Run Server",
+    "type": "node",
+    "request": "launch",
+    "cwd": "${workspaceFolder}/packages/server",
+    "args": [
+        "dist/index.js"
+    ],
+    "env": {
+      "LOGLEVEL": "debug"
+    },
+    "outputCapture": "std",
+    "preLaunchTask": "npm: build"
+}
   ]
 }

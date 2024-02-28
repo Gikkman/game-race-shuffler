@@ -1,51 +1,124 @@
-import Fastify, { RouteHandlerMethod } from 'fastify';
-import WebSocket from 'ws';
+import express from 'express';
+import { Server } from 'http';
+import { RequestHandler } from 'express-serve-static-core';
+import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc';
+import { Logger, WebsocketContract } from '@grs/shared';
 
+const app = express();
+
+/************************************************************************
+ *  Variables
+ ************************************************************************/
 let initialized = false;
-const fastify = Fastify({
-  logger: true,
-});
-const wss = new WebSocket.Server({
-  noServer: true
-});
 
+const port = 47911;
+let server: Server;
 
+let tipcServer: TipcServer;
+let tipcNamespaceServer: TipcNamespaceServer<WebsocketContract>;
+
+const TIPC_LOGGER = Logger.getLogger();
+const LOGGER = Logger.getLogger("WEB");
+
+/************************************************************************
+ * Module functions
+ ************************************************************************/
 export async function init() {
-  if (initialized) {
-    return;
-  }
+  server = app.listen(port, "127.0.0.1");
+
+  // Config server
+  app.use(express.json());
+  server.on('error', onError);
+  server.on('listening', onListening);
+  await setupWebSocket(server);
+
+  process.on("beforeExit", () => {
+    initialized = false;
+    server?.close();
+    tipcServer?.shutdown();
+  });
+
   initialized = true;
+}
 
-  try {
-    wss.on('connection', (ws) => {
-      // Handle WebSocket connections and messages
-      ws.on('message', (message) => {
-        console.log('Received message:', message);
-        ws.send('Reply from server: ' + message);
-      });
-    });
+export function bindGet(url: string, callback: express.RequestHandler) {
+  ensureInitialized();
+  LOGGER.info("Bind GET -> " + url);
+  app.get(url, (req, res, next) => {
+    LOGGER.debug("GET -> %s", req.path);
+    callback(req, res, next);
+  });
+}
 
-    // Upgrade HTTP server to WebSocket server
-    fastify.server.on('upgrade', (request, socket, head) => {
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-      });
-    });
+export function bindPost(url: string, callback: RequestHandler) {
+  ensureInitialized();
+  LOGGER.info("Bind POST -> " + url);
+  app.post(url, (req, res, next) => {
+    LOGGER.debug("POST -> %s", req.path);
+    callback(req, res, next);
+  });
+}
 
-    await fastify.listen({ port: 47911 });
+export function tipc() {
+  ensureInitialized();
+  return tipcNamespaceServer;
+}
+/***********************************************************************
+* Internal methods
+***********************************************************************/
+async function setupWebSocket(server: Server) {
+  tipcServer = await TipcNodeServer.create({
+    server: server,
+    loggerOptions: {
+      debug: TIPC_LOGGER.debug,
+      info: TIPC_LOGGER.info,
+      warn: TIPC_LOGGER.warn,
+      error: TIPC_LOGGER.error,
+      logLevel: TIPC_LOGGER.getLogLevel(),
+    }
+  }).connect();
+  tipcNamespaceServer = tipcServer.forContractAndNamespace<WebsocketContract>("ns");
+}
 
+function onError(err: unknown) {
+  const error = err as {syscall: string, code: string};
+  if (error.syscall !== 'listen') {
+    throw error;
   }
-  catch (err) {
-    fastify.log.error(err);
+
+  const bind = typeof port === 'string'
+    ? 'pipe ' + port
+    : 'port ' + port;
+
+  switch (error.code) {
+  case 'EACCES':
+    LOGGER.error(bind + ' requires elevated privileges');
     process.exit(1);
+    break;
+  case 'EADDRINUSE':
+    LOGGER.error(bind + ' is already in use');
+    process.exit(1);
+    break;
+  case 'ECONNRESET':
+    LOGGER.error('Socket hang up');
+    break;
+  default:
+    throw error;
   }
 }
 
-export function bindGet(path: string, callback: RouteHandlerMethod) {
-  fastify.get(path, callback);
+function onListening() {
+  const addr: unknown = server.address();
+  if(addr && typeof addr === "object" && 'address' in addr && 'port' in addr) {
+    LOGGER.info("Server started. Listening on http://" + addr.address + ":" + addr.port);
+  }
+  else {
+    LOGGER.info("Server started. Listening: " + addr);
+  }
 }
 
-export function bindPost(path: string, callback: RouteHandlerMethod) {
-  fastify.post(path, callback);
+function ensureInitialized() {
+  if(!initialized) {
+    throw new Error("Module is not initialized: " + module.filename);
+  }
 }
-

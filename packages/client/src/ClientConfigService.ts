@@ -12,7 +12,6 @@ export function init() {
   if(initialized) {
     return;
   }
-  initialized = true;
 
   const clientConfigPath = PathUtils.pathRelativeToProjectRoot("client-config.json");
   if(!fs.existsSync(clientConfigPath)) {
@@ -30,13 +29,17 @@ export function init() {
   if(!PathUtils.existsSync(saveStateLocation)) {
     fs.mkdirSync(saveStateLocation);
   }
+
+  initialized = true;
 }
 
 export function getClientConfig(): ClientConfig {
+  ensureInitialized();
   return {...clientConfig};
 }
 
 export function getSaveStateLocation(hash: string): string {
+  ensureInitialized();
   return path.join(saveStateLocation, hash);
 }
 
@@ -92,4 +95,10 @@ function isClientConfig(obj: unknown): obj is ClientConfig {
   });
 
   return true;
+}
+
+function ensureInitialized() {
+  if(!initialized) {
+    throw new Error("Module is not initialized: " + module.filename);
+  }
 }

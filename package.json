@@ -6,8 +6,8 @@
     "clean": "rimraf --glob packages/**/tsconfig.tsbuildinfo packages/**/dist",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "build": "tsc --build --verbose",
-    "prebuild": "npm run --workspaces --if-present prebuild",
-    "start": "npm run --workspace packages/client start"
+    "start:client": "npm run --workspace packages/client start",
+    "start:server": "npm run --workspace packages/server start"
   },
   "keywords": [],
   "license": "AGPL-3.0",
