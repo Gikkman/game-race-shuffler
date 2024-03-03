@@ -3,7 +3,7 @@ import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
-import { ClientConfigService } from '../ClientConfigService';
+import { getBizhawkLocation, getSaveStateLocation } from '../ClientConfigService';
 
 /************************************************************************
  *  Types
@@ -11,11 +11,6 @@ import { ClientConfigService } from '../ClientConfigService';
 type BizhawkEvent = {
   action: string,
   path: string
-}
-
-type GameData = {
-  absolutePath: string;
-  name: string;
 }
 
 enum BizhawkAction {
@@ -124,7 +119,7 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
 
 function saveStateIfRunning(file: GameData) {
   if (file !== BLANK_GAME) {
-    const stateLocation = ClientConfigService.getSaveStateLocation(hashGame(file)) + saveStateExtension;
+    const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
     pushBizhawkEventQueue(BizhawkAction.SAVE, stateLocation);
   }
   else {
@@ -133,7 +128,7 @@ function saveStateIfRunning(file: GameData) {
 }
 
 function loadStateIfExists(file: GameData) {
-  const stateLocation = ClientConfigService.getSaveStateLocation(hashGame(file)) + saveStateExtension;
+  const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
   if (fs.existsSync(stateLocation)) {
     pushBizhawkEventQueue(BizhawkAction.LOAD, stateLocation);
   }
@@ -143,7 +138,7 @@ function loadStateIfExists(file: GameData) {
 }
 
 function deleteStateIfExists(file: GameData) {
-  const stateLocation = ClientConfigService.getSaveStateLocation(hashGame(file)) + saveStateExtension;
+  const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
   if (fs.existsSync(stateLocation)) {
     // TODO: Move previous save state instead of just deleting
     fs.unlinkSync(stateLocation);
@@ -163,13 +158,6 @@ function pushBizhawkEventQueue(action: BizhawkAction, path: string = "") {
 }
 
 /************************************************************************
- *  Bizhawk path methods
- ************************************************************************/
-function getBizhawkPath() {
-  return ClientConfigService.getClientConfig().bizhawk;
-}
-
-/************************************************************************
  *  Bizhawk launch methods
  ************************************************************************/
 let launched = false;
@@ -183,7 +171,7 @@ function intenalLaunchBizhawk() {
   launchTime = new Date();
 
   try {
-    const bizhawkPath = getBizhawkPath();
+    const bizhawkPath = getBizhawkLocation();
     const bizhawkCwd = path.dirname(bizhawkPath);
     const luaPath = getLuaPath();
     const params = ["--lua=" + luaPath, `--url_get=${bizhawkCallPort}`];

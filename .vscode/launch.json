@@ -1,33 +1,49 @@
 {
   "version": "0.2.0",
   "configurations": [
-  {
-      "name": "Run Client",
+    {
+      "name": "Run Client A",
       "type": "node",
       "request": "launch",
       "cwd": "${workspaceFolder}/packages/client",
       "args": [
-          "dist/index.js"
+        "dist/index.js",
+        "--config=client-config-A.json"
       ],
       "env": {
         "LOGLEVEL": "debug"
       },
       "outputCapture": "std",
       "preLaunchTask": "npm: build"
-  },
-  {
-    "name": "Run Server",
-    "type": "node",
-    "request": "launch",
-    "cwd": "${workspaceFolder}/packages/server",
-    "args": [
-        "dist/index.js"
-    ],
-    "env": {
-      "LOGLEVEL": "debug"
     },
-    "outputCapture": "std",
-    "preLaunchTask": "npm: build"
-}
+    {
+      "name": "Run Client B",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/packages/client",
+      "args": [
+        "dist/index.js",
+        "--config=client-config-B.json"
+      ],
+      "env": {
+        "LOGLEVEL": "debug"
+      },
+      "outputCapture": "std",
+      "preLaunchTask": "npm: build"
+    },
+    {
+      "name": "Run Server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/packages/server",
+      "args": [
+        "dist/index.js"
+      ],
+      "env": {
+        "LOGLEVEL": "debug"
+      },
+      "outputCapture": "std",
+      "preLaunchTask": "npm: build"
+    }
   ]
 }

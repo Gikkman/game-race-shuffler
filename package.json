@@ -6,7 +6,8 @@
     "clean": "rimraf --glob packages/**/tsconfig.tsbuildinfo packages/**/dist",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "build": "tsc --build --verbose",
-    "start:client": "npm run --workspace packages/client start",
+    "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.json",
+    "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.json",
     "start:server": "npm run --workspace packages/server start"
   },
   "keywords": [],

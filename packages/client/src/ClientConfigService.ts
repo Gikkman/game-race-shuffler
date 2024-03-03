@@ -1,10 +1,19 @@
 import fs from "node:fs";
-import path from "node:path";
 import { PathUtils } from "@grs/shared";
+import * as CommandLineService from './CommandLineService';
+
+type ClientConfig = {
+  name: string;
+  gameDir: string;
+  saveDir: string;
+  bizhawk: string;
+}
 
 let initialized = false;
-let clientConfig: ClientConfig;
 let saveStateLocation: string;
+let gameLocation: string;
+let bizhawkLocation: string;
+let clientName: string;
 
 export * as ClientConfigService from "./ClientConfigService";
 
@@ -13,87 +22,76 @@ export function init() {
     return;
   }
 
-  const clientConfigPath = PathUtils.pathRelativeToProjectRoot("client-config.json");
+  const clientConfigPath = PathUtils.toAbsolutePath( CommandLineService.getClientConfigLocation(), PathUtils.pathRelativeToProjectRoot(""));
   if(!fs.existsSync(clientConfigPath)) {
     throw new Error("No file found at " + clientConfigPath);
   }
 
   const clientConfigContent = fs.readFileSync(clientConfigPath, "utf-8");
-  const clientConfigJson = JSON.parse(clientConfigContent);
-  if(!isClientConfig(clientConfigJson)) {
-    throw new Error("Invalid client config");
+  const clientConfig = JSON.parse(clientConfigContent);
+  if(!typeGuardClientConfig(clientConfig)){
+    process.exit(1);
   }
-  clientConfig = clientConfigJson;
 
-  saveStateLocation = PathUtils.pathRelativeToProjectRoot("_states");
-  if(!PathUtils.existsSync(saveStateLocation)) {
-    fs.mkdirSync(saveStateLocation);
+  clientName = clientConfig.name;
+
+  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir, clientConfigPath);
+  PathUtils.ensureDir(saveStateLocation);
+
+  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir,  clientConfigPath);
+  PathUtils.ensureDir(gameLocation);
+
+  bizhawkLocation = PathUtils.toAbsolutePath(clientConfig.bizhawk, clientConfigPath);
+  if(!(PathUtils.existsSync(bizhawkLocation) && bizhawkLocation.endsWith("EmuHawk.exe"))){
+    throw new Error("Invalid Bizhawk path. Cannot find EmuHwak.exe at location " + bizhawkLocation);
   }
 
   initialized = true;
 }
 
-export function getClientConfig(): ClientConfig {
+export function getBizhawkLocation(): string {
   ensureInitialized();
-  return {...clientConfig};
+  return bizhawkLocation;
 }
 
-export function getSaveStateLocation(hash: string): string {
+export function getGameLocation(): string {
   ensureInitialized();
-  return path.join(saveStateLocation, hash);
+  return gameLocation;
 }
 
-export type ClientConfig = {
-  bizhawk: string,
-  games: {
-    index: number,
-    path: string,
-    name: string,
-  }[]
+export function getSaveStateLocation(): string {
+  ensureInitialized();
+  return saveStateLocation;
+}
+
+export function getClientName(): string {
+  ensureInitialized();
+  return clientName;
 }
 
 /************************************************************************
 *  Internal Functions
 ************************************************************************/
 
-function isClientConfig(obj: unknown): obj is ClientConfig {
+function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
   if (typeof obj !== 'object' || obj === null) {
-    throw new Error(`The content of client-config.json was not a valid Javascript object`);
+    return false;
   }
 
-  const { bizhawk, games } = obj as { bizhawk: unknown, games: unknown[] };
+  const { name, gameDir, saveDir, bizhawk } = obj as Partial<ClientConfig>;
 
-  if (typeof bizhawk !== 'string') {
-    throw new Error(`Property 'bizhawk' in client-config.json is not a string`);
+  if(!(typeof name === 'string'    && name.length > 0)) {
+    throw new Error("Client config error! Missing property 'name'");
   }
-  if(!PathUtils.existsSync(bizhawk) || !bizhawk.endsWith("EmuHawk.exe")) {
-    throw new Error(`The 'bizhawk' property in client-config.json does not resolve to a file: ${bizhawk}`);
+  if(!(typeof gameDir === 'string' && gameDir.length > 0)) {
+    throw new Error("Client config error. Missing property 'gameDir'");
   }
-
-  if (!Array.isArray(games)) {
-    throw new Error(`Property 'game' in client-config.json is not an array`);
+  if(!(typeof saveDir === 'string' && saveDir.length > 0)) {
+    throw new Error("Client config error. Missing property 'saveDir'");
   }
-
-  games.forEach((game, idx) => {
-    if( typeof game !== 'object' || game === null) {
-      throw new Error(`Game element at index ${idx} in client-config.json is not an object`);
-    }
-
-    const {path, index, name} = game as { path: unknown, index: unknown, name: unknown };
-    if(typeof index !== 'number') {
-      throw new Error(`Property 'index' of game ${idx} in client-config.json is not a number`);
-    }
-    if(typeof path !== 'string') {
-      throw new Error(`Property 'path' of game ${idx} in client-config.json is not a string`);
-    }
-    if(!PathUtils.existsSync(path)) {
-      throw new Error(`The 'path' property of game ${idx} in client-config.json does not resolve to a file: ${path}`);
-    }
-    if(typeof name !== 'string') {
-      throw new Error(`Property 'name' of game ${idx} in client-config.json is not a string`);
-    }
-  });
-
+  if(!(typeof bizhawk === 'string' && bizhawk.length > 0)) {
+    throw new Error("Client config error. Missing property ''bizhawk");
+  }
   return true;
 }
 

@@ -52,6 +52,21 @@ export function existsSync(p: string): boolean {
   return fs.existsSync(relativePath);
 }
 
+export function toAbsolutePath(to: string, from: string) {
+  if(path.isAbsolute(to)) {
+    return to;
+  }
+  const fromDir = fs.statSync(from).isDirectory() ? from : path.dirname(from);
+  return path.resolve(fromDir, to);
+}
+
+export function ensureDir(path: string) {
+  if(existsSync(path)) {
+    return path;
+  }
+  return fs.mkdirSync(path, {recursive: true});
+}
+
 /************************************************************************
  *  Internal functions
  ************************************************************************/
