@@ -106,11 +106,13 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
     LOGGER.info("Loading game: ", newGame.absolutePath);
   }
   muteBizhawk();
+  await FunctionUtils.sleep(50);
   saveStateIfRunning(currentGame);
-  await FunctionUtils.sleep(16*5);
+  //await FunctionUtils.sleep(30);
   pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absolutePath);
-  await FunctionUtils.sleep(16*5);
+  //await FunctionUtils.sleep(30);
   loadStateIfExists(newGame);
+  await FunctionUtils.sleep(50);
   unmuteBizhawk();
 
   currentGame = newGame;

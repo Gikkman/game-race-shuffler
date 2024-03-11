@@ -54,7 +54,7 @@ function fileToName(p: string): GameData {
       lastDot = i;
     }
   }
-  const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) );
+  const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) ).trim()
   return {absolutePath: p, name: gameName};
 }
 

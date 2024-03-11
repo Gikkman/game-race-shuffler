@@ -4,6 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
 import { WebsocketContract, Logger } from '@grs/shared';
 import { AddressInfo } from 'ws';
+import { FunctionUtils } from '@grs/shared';
 
 /************************************************************************
  *  Variables
@@ -16,7 +17,7 @@ let server: Server;
 
 const TIPC_LOGGER = Logger.getLogger();
 const tipcFactory = TipcNodeClient.create({
-  address: "127.0.0.1",
+  host: "127.0.0.1",
   port: 47911,
   loggerOptions: {
     debug: TIPC_LOGGER.debug,
@@ -24,6 +25,19 @@ const tipcFactory = TipcNodeClient.create({
     warn: TIPC_LOGGER.warn,
     error: TIPC_LOGGER.error,
     logLevel: TIPC_LOGGER.getLogLevel(),
+  },
+  onDisconnect: async () => {
+    TIPC_LOGGER.error("Server disconnected. Reconnecting");
+    const wait = 1000;
+    for(let attempt = 0; attempt < 120; attempt++) {
+      await FunctionUtils.sleep(wait);
+      try {
+        await tipcFactory.connect()
+        return
+      } catch (ex) {
+        TIPC_LOGGER.info("Reconnect attempt failed. Waiting");
+      }
+    }
   }
 });
 

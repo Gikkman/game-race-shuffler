@@ -12,7 +12,7 @@ export async function init() {
   }
 
   Server.bindPost("/random", (req,res) => {
-    LOGGER.debug("Request to load random game");
+    LOGGER.info("Request to load random game");
     const potentialGames = getGamesList();
 
     let num = Math.PI;
@@ -28,7 +28,7 @@ export async function init() {
       return res.status(400).send("Could not load new game");
     }
 
-    LOGGER.debug("Requesting to load game by name: " + name);
+    LOGGER.info("Requesting to load game by name: %s", name);
     Server.tipc().send("loadGame", name);
     return res.send("OK");
   });
