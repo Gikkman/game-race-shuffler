@@ -3,6 +3,7 @@ import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc';
 import { Logger, WebsocketContract } from '@grs/shared';
+import { ServerConfigService } from './ServerConfigService';
 
 const app = express();
 
@@ -24,7 +25,7 @@ const LOGGER = Logger.getLogger("WEB");
  * Module functions
  ************************************************************************/
 export async function init() {
-  server = app.listen(port, "127.0.0.1");
+  server = app.listen(port, "0.0.0.0");
 
   // Config server
   app.use(express.json());
@@ -75,7 +76,27 @@ async function setupWebSocket(server: Server) {
       warn: TIPC_LOGGER.warn,
       error: TIPC_LOGGER.error,
       logLevel: TIPC_LOGGER.getLogLevel(),
-    }
+    },
+    onNewConnection: (ws, request) => {
+        if(!request.url || !request.url.includes("?")) {
+          ws.close()
+          return LOGGER.info("New connection failed. No query params")
+        }
+        const url = new URL(request.url, `http://${request.headers.host}`);
+        const key = url.searchParams.get("key")
+        if(!key) {
+          ws.close()
+          return LOGGER.info("New connection failed. No key provided")
+        }
+        if(key !== ServerConfigService.getConnectionKey()) {
+          ws.close()
+          return LOGGER.info("New connection failed. Key missmatch. Got: %s", key)
+        }
+        LOGGER.info("New client connected")
+        ws.on('close', () => {
+          LOGGER.info("Client disconnected")
+        })
+    },
   }).connect();
   tipcNamespaceServer = tipcServer.forContractAndNamespace<WebsocketContract>("ns");
 }

@@ -4,5 +4,8 @@
   },
   "eslint.options": {
      "overrideConfigFile": ".eslint.cjs",
+  },
+  "terminal.integrated.autoReplies": {
+    "Terminate batch job (Y/N)": "Y\r"
   }
 }

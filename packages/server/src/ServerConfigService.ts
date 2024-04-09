@@ -1,5 +1,7 @@
 import { FunctionUtils } from "@grs/shared";
 
+export * as ServerConfigService from "./ServerConfigService";
+
 let initialized = false;
 
 const games = [
@@ -8,6 +10,7 @@ const games = [
   "Chip n Dale - Rescue Rangers",
   "Snake Rattle n Roll"
 ];
+
 const logicalGameNames: string[] = [];
 
 export function init() {
@@ -24,6 +27,11 @@ export function init() {
 export function getGamesList() {
   ensureInitialized();
   return logicalGameNames;
+}
+
+export function getConnectionKey() {
+  ensureInitialized();
+  return "KEY-HERE";
 }
 
 function ensureInitialized() {

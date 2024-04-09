@@ -7,6 +7,7 @@ type ClientConfig = {
   gameDir: string;
   saveDir: string;
   bizhawk: string;
+  key: string;
 }
 
 let initialized = false;
@@ -14,6 +15,7 @@ let saveStateLocation: string;
 let gameLocation: string;
 let bizhawkLocation: string;
 let clientName: string;
+let key: string;
 
 export * as ClientConfigService from "./ClientConfigService";
 
@@ -34,6 +36,7 @@ export function init() {
   }
 
   clientName = clientConfig.name;
+  key = clientConfig.key;
 
   saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir, clientConfigPath);
   PathUtils.ensureDir(saveStateLocation);
@@ -69,6 +72,10 @@ export function getClientName(): string {
   return clientName;
 }
 
+export function getConnectionKey(): string {
+  ensureInitialized();
+  return key;
+}
 /************************************************************************
 *  Internal Functions
 ************************************************************************/
@@ -78,7 +85,7 @@ function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
     return false;
   }
 
-  const { name, gameDir, saveDir, bizhawk } = obj as Partial<ClientConfig>;
+  const { name, gameDir, saveDir, bizhawk, key } = obj as Partial<ClientConfig>;
 
   if(!(typeof name === 'string'    && name.length > 0)) {
     throw new Error("Client config error! Missing property 'name'");
@@ -90,7 +97,10 @@ function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
     throw new Error("Client config error. Missing property 'saveDir'");
   }
   if(!(typeof bizhawk === 'string' && bizhawk.length > 0)) {
-    throw new Error("Client config error. Missing property ''bizhawk");
+    throw new Error("Client config error. Missing property 'bizhawk'");
+  }
+  if(!(typeof key === 'string' && key.length > 0)) {
+    throw new Error("Client config error. Missing property 'key'");
   }
   return true;
 }

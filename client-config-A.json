@@ -2,5 +2,6 @@
   "name": "ClientA",
   "gameDir": "W:/Games/Nintendo - Nintendo Entertainment System [nes]",
   "saveDir": "./_statesA",
-  "bizhawk": "W:\\Emulator\\Bizhawk 2.8.0\\EmuHawk.exe"
+  "bizhawk": "W:\\Emulator\\Bizhawk 2.8.0\\EmuHawk.exe",
+  "key": "KEY-HERE"
 }
