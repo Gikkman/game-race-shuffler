@@ -1,8 +1,8 @@
 local port = comm.httpGetGetUrl()
 local url = "http://127.0.0.1:" .. port .. "/bizhawk"
 local frameCount = 0
-
-print("Server address: " .. url)
+local gameCompleted = false
+local gameLoaded = not (gameinfo.getromname() == "Null" or gameinfo.getromname() == nil)
 
 event.onframeend( function()
   frameCount = frameCount + 1
@@ -43,9 +43,16 @@ function request()
 end
 
 while true do
-    if (math.fmod(frameCount, 6) == 0) then
-        request()
-    end
+  if (math.fmod(frameCount, 6) == 0) then
+    request()
+  end
 
-    emu.frameadvance()
+  if (frameCount > 180 and gameLoaded == true and gameCompleted == false and input.get()["Space"]) then
+    print("Game completed")
+    comm.httpPost(url .. "/complete", "")
+    gameCompleted = true
+  end
+
+
+  emu.frameadvance()
 end

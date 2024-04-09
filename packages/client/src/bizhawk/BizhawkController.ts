@@ -30,6 +30,12 @@ export function init() {
     res.send("");
   });
 
+  bindPost("/bizhawk/complete", (_, res) => {
+    LOGGER.debug("POST -> /bizhawk/complete");
+    // TODO: tipc().send("completeGame", "")
+    res.send("");
+  });
+
   bindPost("/bizhawk/pong", (_, res) => {
     LOGGER.debug("POST -> /bizhawk/pong");
     BizhawkService.bizhawkPong();
