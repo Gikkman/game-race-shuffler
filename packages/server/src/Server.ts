@@ -2,11 +2,10 @@ import express from 'express';
 import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc';
-import { Logger, WebsocketContract } from '@grs/shared';
+import { Logger, WebsocketContract, PathUtils } from '@grs/shared';
 import { ServerConfigService } from './ServerConfigService';
 
 const app = express();
-app.use(express.json());
 
 /************************************************************************
  *  Variables
@@ -26,6 +25,9 @@ const LOGGER = Logger.getLogger("WEB");
  * Module functions
  ************************************************************************/
 export async function init() {
+  app.use(express.json());
+  app.use("/",express.static(PathUtils.pathRelativeToWorkspaceRoot("public")));
+
   server = app.listen(port, "0.0.0.0");
 
   // Config server

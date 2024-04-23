@@ -5,7 +5,8 @@
   "scripts": {
     "clean": "rimraf --glob packages/**/tsconfig.tsbuildinfo packages/**/dist",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
-    "build": "tsc --build --verbose",
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces",
     "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.json",
     "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.json",
     "start:server": "npm run --workspace packages/server start"
@@ -25,7 +26,7 @@
     "@typescript-eslint/eslint-plugin": "^6.18.0",
     "@typescript-eslint/parser": "^6.18.0",
     "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.19.2",
+    "eslint-plugin-vue": "^9.25.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

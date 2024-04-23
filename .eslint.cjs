@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:vue/vue3-essential"],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:vue/vue3-recommended"],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "vue"],
   root: true,
@@ -17,7 +17,7 @@ module.exports = {
     project: "packages/**/tsconfig.json"
   },
 
-  ignorePatterns: ["dist"],
+  ignorePatterns: ["dist", "vite.config.ts", "**/*.vue"],
 
   rules: {
     "@typescript-eslint/no-unused-vars": [
