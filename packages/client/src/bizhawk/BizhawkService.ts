@@ -93,6 +93,10 @@ export function launchBizhawk(serverPort: number) {
   intenalLaunchBizhawk();
 }
 
+export function getCurrentGame(): GameData {
+  return currentGame;
+}
+
 /************************************************************************
  *  Bizhawk manipulation methods
  ************************************************************************/
@@ -106,7 +110,7 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
     LOGGER.info("Loading game: ", newGame.absolutePath);
   }
   muteBizhawk();
-  await FunctionUtils.sleep(50);
+  await FunctionUtils.sleep(50); // Just over 3 frames
   saveStateIfRunning(currentGame);
   //await FunctionUtils.sleep(30);
   pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absolutePath);

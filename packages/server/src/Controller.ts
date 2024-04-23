@@ -11,9 +11,14 @@ export async function init() {
     return;
   }
 
+  Server.bindPost("/start", (req,res) => {
+    LOGGER.info("Request to start race");
+    res.send("OK");
+  });
+
   Server.bindPost("/random", (req,res) => {
     LOGGER.info("Request to load random game");
-    const potentialGames = getGamesList();
+    const potentialGames = getGamesList().logicalGameNames;
 
     let num = Math.PI;
     do {

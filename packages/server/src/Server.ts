@@ -6,6 +6,7 @@ import { Logger, WebsocketContract } from '@grs/shared';
 import { ServerConfigService } from './ServerConfigService';
 
 const app = express();
+app.use(express.json());
 
 /************************************************************************
  *  Variables
@@ -78,24 +79,24 @@ async function setupWebSocket(server: Server) {
       logLevel: TIPC_LOGGER.getLogLevel(),
     },
     onNewConnection: (ws, request) => {
-        if(!request.url || !request.url.includes("?")) {
-          ws.close()
-          return LOGGER.info("New connection failed. No query params")
-        }
-        const url = new URL(request.url, `http://${request.headers.host}`);
-        const key = url.searchParams.get("key")
-        if(!key) {
-          ws.close()
-          return LOGGER.info("New connection failed. No key provided")
-        }
-        if(key !== ServerConfigService.getConnectionKey()) {
-          ws.close()
-          return LOGGER.info("New connection failed. Key missmatch. Got: %s", key)
-        }
-        LOGGER.info("New client connected")
-        ws.on('close', () => {
-          LOGGER.info("Client disconnected")
-        })
+      if(!request.url || !request.url.includes("?")) {
+        ws.close();
+        return LOGGER.info("New connection failed. No query params");
+      }
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const key = url.searchParams.get("key");
+      if(!key) {
+        ws.close();
+        return LOGGER.info("New connection failed. No key provided");
+      }
+      if(key !== ServerConfigService.getConnectionKey()) {
+        ws.close();
+        return LOGGER.info("New connection failed. Key missmatch. Got: %s", key);
+      }
+      LOGGER.info("New client connected");
+      ws.on('close', () => {
+        LOGGER.info("Client disconnected");
+      });
     },
   }).connect();
   tipcNamespaceServer = tipcServer.forContractAndNamespace<WebsocketContract>("ns");

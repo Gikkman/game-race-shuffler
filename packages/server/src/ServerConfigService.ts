@@ -26,7 +26,7 @@ export function init() {
 
 export function getGamesList() {
   ensureInitialized();
-  return logicalGameNames;
+  return {games, logicalGameNames};
 }
 
 export function getConnectionKey() {

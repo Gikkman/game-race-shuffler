@@ -2,7 +2,7 @@ local port = comm.httpGetGetUrl()
 local url = "http://127.0.0.1:" .. port .. "/bizhawk"
 local frameCount = 0
 local gameCompleted = false
-local gameLoaded = not (gameinfo.getromname() == "Null" or gameinfo.getromname() == nil)
+local gameLoaded = false
 
 event.onframeend( function()
   frameCount = frameCount + 1
@@ -29,6 +29,9 @@ function request()
         savestate.save(path)
     elseif (action == 'GAME') then
         client.openrom(path)
+        gameLoaded = true
+        gameCompleted = false
+        frameCount = 0
     elseif (action == 'LOAD') then
         savestate.load(path)
     elseif (action == 'CONT') then
@@ -48,7 +51,7 @@ while true do
   end
 
   if (frameCount > 180 and gameLoaded == true and gameCompleted == false and input.get()["Space"]) then
-    print("Game completed")
+    print("INPUT: Game completed at frame " .. frameCount)
     comm.httpPost(url .. "/complete", "")
     gameCompleted = true
   end

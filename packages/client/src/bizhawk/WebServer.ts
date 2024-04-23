@@ -44,12 +44,14 @@ export async function init() {
       for(let attempt = 0; attempt < 120; attempt++) {
         await FunctionUtils.sleep(wait);
         try {
-          await tipcConnectionManager.connect()
-          return
-        } catch (ex) {
+          return await tipcConnectionManager.connect();
+        }
+        catch (ex) {
           TIPC_LOGGER.info("Reconnect attempt failed. Waiting");
         }
       }
+      TIPC_LOGGER.error("Reconnect failed permanently. Exiting");
+      process.exit(1);
     }
   });
 

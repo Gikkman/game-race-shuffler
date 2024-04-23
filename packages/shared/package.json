@@ -1,7 +1,7 @@
 {
   "name": "@grs/shared",
   "version": "1.0.0",
-  "main": "./dist/index.js",
+  "main": "./dist",
   "private": true,
   "scripts": {
     "build": "tsc --build --verbose"

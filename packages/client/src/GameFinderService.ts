@@ -24,9 +24,13 @@ export function init() {
   initialized = true;
 }
 
-export function getGameForName(name: string) {
+export function getGameForLogicalName(logicalName: string) {
   ensureInitialized();
-  return nameFileMap.get(name);
+  return nameFileMap.get(logicalName);
+}
+
+export function getLogicalNameForGame(game: GameData) {
+  return calculateLogicalName(game).logicalName;
 }
 
 /************************************************************************
@@ -54,7 +58,7 @@ function fileToName(p: string): GameData {
       lastDot = i;
     }
   }
-  const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) ).trim()
+  const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) ).trim();
   return {absolutePath: p, name: gameName};
 }
 
