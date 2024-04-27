@@ -1,5 +1,4 @@
-import { Logger } from "@grs/shared";
-import { RaceGame, RaceParticipant, RacePhase, RaceStateOverview, RaceStateUpdate } from "@grs/shared/src/Types";
+import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview } from "@grs/shared";
 
 const NOOP = (..._: unknown[]) => { };
 
@@ -110,6 +109,7 @@ export default class RaceState {
     }
 
     this.setCurrentGame(nextGame.name);
+    this.updateState("currentGame");
   }
 
 

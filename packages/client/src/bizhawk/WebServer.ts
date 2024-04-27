@@ -2,10 +2,11 @@ import express from 'express';
 import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc/cjs';
-import { WebsocketContract, Logger } from '@grs/shared';
 import { AddressInfo } from 'ws';
-import { FunctionUtils } from '@grs/shared';
-import { ClientConfigService } from '../ClientConfigService';
+
+import { WebsocketContract, Logger, FunctionUtils } from '../../../shared/dist/_index.js';
+
+import { ClientConfigService } from '../ClientConfigService.js';
 
 /************************************************************************
  *  Variables

@@ -1,6 +1,6 @@
-import { FunctionUtils } from "@grs/shared";
+import { FunctionUtils } from "../../shared/dist/_index.js";
 
-export * as ServerConfigService from "./ServerConfigService";
+export * as ServerConfigService from "./ServerConfigService.js";
 
 let initialized = false;
 

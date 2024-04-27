@@ -5,13 +5,14 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: "../server/public",
+    outDir: "../server/html",
+    target: 'esnext'
   },
   server: {
     proxy: {
       "/api": "localhost:47911",
       "/ws":  {
-        target: 'localhost:47911',
+        target: 'ws://localhost',
         ws: true,
       },
     }

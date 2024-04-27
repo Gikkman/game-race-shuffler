@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Types } from '@grs/shared';
+import { RaceStateOverview } from '@grs/shared';
 
-defineProps<{ state: Types.RaceStateOverview }>();
+defineProps<{ state: RaceStateOverview }>();
 
 </script>
 

@@ -1,7 +1,23 @@
 {
   "name": "@grs/shared",
   "version": "1.0.0",
-  "main": "./dist",
+  "main": "./dist/_index.js",
+  "module": "./dist/_index.js",
+  "browser": "./dist/_index.js",
+  "exports": {
+    ".": {
+      "node": {
+        "import": "./dist/_index.js",
+        "require": "./dist/_index.js",
+        "default": "./dist/_browser.js"
+      },
+      "default": {
+        "import": "./dist/_browser.js",
+        "default": "./dist/_browser.js"
+      }
+    }
+  },
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc --build --verbose"

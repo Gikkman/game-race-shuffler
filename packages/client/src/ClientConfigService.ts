@@ -1,6 +1,8 @@
 import fs from "node:fs";
-import { PathUtils } from "@grs/shared";
-import * as CommandLineService from './CommandLineService';
+
+import { PathUtils } from "../../shared/dist/_index.js";
+
+import * as CommandLineService from './CommandLineService.js';
 
 type ClientConfig = {
   name: string;
@@ -17,7 +19,7 @@ let bizhawkLocation: string;
 let clientName: string;
 let key: string;
 
-export * as ClientConfigService from "./ClientConfigService";
+export * as ClientConfigService from "./ClientConfigService.js";
 
 export function init() {
   if(initialized) {

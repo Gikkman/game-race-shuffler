@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ClientConfigService } from "./ClientConfigService";
-import { FunctionUtils, PathUtils } from '@grs/shared';
+
+import { FunctionUtils, PathUtils } from '../../shared/dist/_index.js';
+
+import { ClientConfigService } from "./ClientConfigService.js";
 
 const nameFileMap = new Map<string, GameData>();
 let initialized = false;

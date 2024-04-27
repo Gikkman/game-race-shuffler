@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Types } from '@grs/shared';
+import { RaceStateOverview } from '@grs/shared';
 import { ref } from 'vue';
-import StateView from './components/StateView.vue'
+import StateView from './components/StateView.vue';
 import { getClient } from "./lib/TipcListener";
 
-const state = ref<Types.RaceStateOverview>({games: [], participants: [], phase: "NEW"})
-getClient().addListener("raceStateUpdate", (update) => state.value = update)
+const state = ref<RaceStateOverview>({games: [], participants: [], phase: "NEW"})
+getClient().addListener("raceStateUpdate", (update) => {
+  state.value = update;
+  console.log(update)
+})
 
 </script>
 

@@ -1,8 +1,9 @@
-import * as BizhawkService from './BizhawkService';
-import * as GameFinderService from '../GameFinderService';
-import { bindGet, bindPost, tipc } from './WebServer';
-import { Logger } from '@grs/shared';
-import { ClientConfigService } from '../ClientConfigService';
+import { Logger } from '../../../shared/dist/_index.js';
+
+import * as BizhawkService from './BizhawkService.js';
+import * as GameFinderService from '../GameFinderService.js';
+import { bindGet, bindPost, tipc } from './WebServer.js';
+import { ClientConfigService } from '../ClientConfigService.js';
 
 const LOGGER = Logger.getLogger("BizhawkController");
 let initialized = false;

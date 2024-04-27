@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "clean": "rimraf --glob packages/**/tsconfig.tsbuildinfo packages/**/dist",
+    "clean": "rimraf --glob packages/**/*.tsbuildinfo packages/**/dist packages/**/html",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "dev": "npm run dev --workspaces --if-present",
     "build": "npm run build --workspaces",

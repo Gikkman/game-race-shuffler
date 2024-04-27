@@ -2,8 +2,10 @@ import express from 'express';
 import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
-import { Logger, WebsocketContract, PathUtils } from '@grs/shared';
-import { ServerConfigService } from './ServerConfigService';
+
+import { Logger, WebsocketContract, PathUtils } from '../../shared/dist/_index.js';
+
+import { ServerConfigService } from './ServerConfigService.js';
 
 const app = express();
 
@@ -25,8 +27,10 @@ const LOGGER = Logger.getLogger("WEB");
  * Module functions
  ************************************************************************/
 export async function init() {
+  const htmlPath = PathUtils.pathRelativeToWorkspaceRoot("html");
+  console.log(htmlPath);
   app.use(express.json());
-  app.use("/",express.static(PathUtils.pathRelativeToWorkspaceRoot("public")));
+  app.use("/",express.static(htmlPath));
 
   server = app.listen(port, "0.0.0.0");
 

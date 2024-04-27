@@ -1,10 +1,16 @@
-import { PathUtils } from '@grs/shared';
-import * as ClientConfigService from './ClientConfigService';
-import * as WebServer from './bizhawk/WebServer';
-import * as BizhawkController from './bizhawk/BizhawkController';
-import * as GameFinderService from './GameFinderService';
-import * as CommandLineService from './CommandLineService';
-import { launchBizhawk } from './bizhawk/BizhawkService';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { PathUtils } from '../../shared/dist/_index.js';
+
+import * as ClientConfigService from './ClientConfigService.js';
+import * as WebServer from './bizhawk/WebServer.js';
+import * as BizhawkController from './bizhawk/BizhawkController.js';
+import * as GameFinderService from './GameFinderService.js';
+import * as CommandLineService from './CommandLineService.js';
+import { launchBizhawk } from './bizhawk/BizhawkService.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   await PathUtils.init(__dirname);

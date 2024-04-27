@@ -7,7 +7,7 @@ module.exports = {
   env: {
     node: true,
     browser: true,
-    es2021: true,
+    es2022: true,
   },
 
   parserOptions: {
@@ -17,7 +17,7 @@ module.exports = {
     project: "packages/**/tsconfig.json"
   },
 
-  ignorePatterns: ["dist", "vite.config.ts", "**/*.vue"],
+  ignorePatterns: ["dist", "html", "vite.config.ts", "**/*.vue"],
 
   rules: {
     "@typescript-eslint/no-unused-vars": [

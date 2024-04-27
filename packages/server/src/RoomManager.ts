@@ -1,7 +1,8 @@
-import { Logger, FunctionUtils } from '@grs/shared';
-import * as Server from './Server';
-import RaceState from './RaceState';
-import { ServerConfigService } from './ServerConfigService';
+import { Logger, FunctionUtils } from '../../shared/dist/_index.js';
+
+import * as Server from './Server.js';
+import RaceState from './RaceState.js';
+import { ServerConfigService } from './ServerConfigService.js';
 
 const LOGGER = Logger.getLogger("RoomMananger");
 let initialized = false;
@@ -60,4 +61,8 @@ export async function init() {
 
 export function startRace() {
   raceState.startRace();
+}
+
+export function swapGame() {
+  raceState.swapGameIfPossible();
 }

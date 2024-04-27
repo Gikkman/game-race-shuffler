@@ -1,4 +1,4 @@
-import { RaceParticipant, RaceStateUpdate } from "./Types";
+import { RaceParticipant, RaceStateUpdate } from "./Types.js";
 
 export interface WebsocketContract {
   loadGame: string,

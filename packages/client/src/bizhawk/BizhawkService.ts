@@ -1,9 +1,11 @@
 import * as ChildProcess from 'child_process';
-import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
-import { getBizhawkLocation, getSaveStateLocation } from '../ClientConfigService';
+
+import { Logger, FunctionUtils, PathUtils } from '../../../shared/dist/_index.js';
+
+import { getBizhawkLocation, getSaveStateLocation } from '../ClientConfigService.js';
 
 /************************************************************************
  *  Types
