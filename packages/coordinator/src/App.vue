@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { Types } from '@grs/shared';
+import { ref } from 'vue';
+import StateView from './components/StateView.vue'
+import { getClient } from "./lib/TipcListener";
+
+const state = ref<Types.RaceStateOverview>({games: [], participants: [], phase: "NEW"})
+getClient().addListener("raceStateUpdate", (update) => state.value = update)
+
 </script>
 
 <template>
@@ -11,7 +18,7 @@ import HelloWorld from './components/HelloWorld.vue'
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <StateView :state=state />
 </template>
 
 <style scoped>

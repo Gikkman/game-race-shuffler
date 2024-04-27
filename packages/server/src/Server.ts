@@ -1,7 +1,7 @@
 import express from 'express';
 import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
-import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc';
+import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
 import { Logger, WebsocketContract, PathUtils } from '@grs/shared';
 import { ServerConfigService } from './ServerConfigService';
 
@@ -72,6 +72,7 @@ export function tipc() {
 ***********************************************************************/
 async function setupWebSocket(server: Server) {
   tipcServer = await TipcNodeServer.create({
+    path: "/ws",
     server: server,
     loggerOptions: {
       debug: TIPC_LOGGER.debug,

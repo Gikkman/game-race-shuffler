@@ -1,7 +1,7 @@
 import express from 'express';
 import { Server } from 'http';
 import { RequestHandler } from 'express-serve-static-core';
-import { TipcNamespaceClient, TipcNodeClient } from 'tipc';
+import { TipcNamespaceClient, TipcNodeClient } from 'tipc/cjs';
 import { WebsocketContract, Logger } from '@grs/shared';
 import { AddressInfo } from 'ws';
 import { FunctionUtils } from '@grs/shared';
@@ -30,7 +30,7 @@ export async function init() {
   const tipcConnectionManager = TipcNodeClient.create({
     host: "127.0.0.1",
     port: 47911,
-    path: "/?key="+connectKey,
+    path: "/ws?key="+connectKey,
     loggerOptions: {
       debug: TIPC_LOGGER.debug,
       info: TIPC_LOGGER.info,

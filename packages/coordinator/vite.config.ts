@@ -6,5 +6,14 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     outDir: "../server/public",
+  },
+  server: {
+    proxy: {
+      "/api": "localhost:47911",
+      "/ws":  {
+        target: 'localhost:47911',
+        ws: true,
+      },
+    }
   }
 })

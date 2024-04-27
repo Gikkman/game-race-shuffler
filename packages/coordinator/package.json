@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.21",
-    "@grs/shared": "^1.0.0"
+    "@grs/shared": "^1.0.0",
+    "tipc": "^2.0.3",
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
