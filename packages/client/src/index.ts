@@ -20,6 +20,7 @@ async function main() {
   await WebServer.init();
   await BizhawkController.init();
 
+  // Join room
 
   launchBizhawk(WebServer.getAddress().port);
 }

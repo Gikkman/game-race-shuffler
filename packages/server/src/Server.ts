@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { NextFunction, RequestHandler, Request, Response } from 'express';
 import { Server } from 'http';
-import { RequestHandler } from 'express-serve-static-core';
+import history from "connect-history-api-fallback";
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
 
 import { Logger, WebsocketContract, PathUtils } from '../../shared/dist/_index.js';
@@ -27,17 +27,22 @@ const LOGGER = Logger.getLogger("WEB");
  * Module functions
  ************************************************************************/
 export async function init() {
-  const htmlPath = PathUtils.pathRelativeToWorkspaceRoot("html");
-  console.log(htmlPath);
-  app.use(express.json());
-  app.use("/",express.static(htmlPath));
-
-  server = app.listen(port, "0.0.0.0");
-
   // Config server
   app.use(express.json());
+  server = app.listen(port, "0.0.0.0");
+
   server.on('error', onError);
   server.on('listening', onListening);
+  app.use((req,_,next) => {
+    if(req.path.startsWith("/assets")) {
+      LOGGER.debug(`%s -> %s`, req.method, req.path);
+    }
+    else {
+      LOGGER.info(`%s -> %s`, req.method, req.path);
+    }
+    next();
+  });
+
   await setupWebSocket(server);
 
   process.on("beforeExit", () => {
@@ -49,7 +54,14 @@ export async function init() {
   initialized = true;
 }
 
-export function bindGet(url: string, callback: express.RequestHandler) {
+export function bindServerHandler() {
+  const htmlPath = PathUtils.pathRelativeToWorkspaceRoot("html");
+  app.use(history());
+  app.use("/",express.static(htmlPath));
+  app.use(handleRouteError);
+}
+
+export function bindGet(url: string, callback: RequestHandler) {
   ensureInitialized();
   LOGGER.info("Bind GET -> " + url);
   app.get(url, (req, res, next) => {
@@ -134,6 +146,11 @@ function onError(err: unknown) {
   default:
     throw error;
   }
+}
+
+function handleRouteError(err: Error|string, req: Request, res: Response, _: NextFunction) {
+  LOGGER.error(err);
+  res.status(500).send("Internal server error");
 }
 
 function onListening() {

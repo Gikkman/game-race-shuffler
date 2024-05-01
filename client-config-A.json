@@ -3,5 +3,6 @@
   "gameDir": "W:/Games/Nintendo - Nintendo Entertainment System [nes]",
   "saveDir": "./_statesA",
   "bizhawk": "W:\\Emulator\\Bizhawk 2.8.0\\EmuHawk.exe",
-  "key": "KEY-HERE"
+  "roomKey": "KEY-HERE",
+  "roomName": "ESA2024"
 }

@@ -1,5 +1,4 @@
 import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview } from "@grs/shared";
-
 const NOOP = (..._: unknown[]) => { };
 
 type RaceStateOptions = {
@@ -42,6 +41,7 @@ export default class RaceState {
     this.ensurePhase("NEW", "Could not start race");
     this.phase = "ACTIVE";
     this.updateState("phase");
+    this.swapGameIfPossible();
   }
 
   addParticipant(name: string) {

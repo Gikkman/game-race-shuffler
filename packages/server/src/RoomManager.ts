@@ -1,68 +1,111 @@
-import { Logger, FunctionUtils } from '../../shared/dist/_index.js';
-
+import { randomUUID, createHash } from "crypto";
+import { CreateRoomRequest, RoomOverview } from '@grs/shared';
 import * as Server from './Server.js';
 import RaceState from './RaceState.js';
-import { ServerConfigService } from './ServerConfigService.js';
 
-const LOGGER = Logger.getLogger("RoomMananger");
-let initialized = false;
 
-let raceState: RaceState;
+/************************************************************************
+*  Setup stuff
+************************************************************************/
 
-export async function init() {
-  const tipc = Server.tipc();
-  const raceGames = ServerConfigService.getGamesList().games;
-  const nameToLogical = new Map(raceGames.map(g => [g, FunctionUtils.calculateLogicalName(g)]));
-  const logicalToName = new Map(raceGames.map(g => [FunctionUtils.calculateLogicalName(g), g]));
-  if(initialized) {
-    return;
-  }
+type RoomState = {
+  raceState: RaceState,
+  created: number,
+  name: string,
+  key: string,
+  adminKey: string,
+  userKeys: Map<string, string>,
+}
 
-  raceState = new RaceState({
-    games: raceGames,
+const rooms = new Map<string, RoomState>();
 
+/************************************************************************
+*  Exported function
+************************************************************************/
+
+export function startRace(roomName: string) {
+  rooms.get(roomName)?.raceState.startRace();
+}
+
+export function swapGame(roomName: string) {
+  rooms.get(roomName)?.raceState.swapGameIfPossible();
+}
+
+export function createRoom(data: CreateRoomRequest) {
+  const raceState = new RaceState({
+    games: data.games,
     onStateUpdate(update) {
-      tipc.send("raceStateUpdate", update);
-
-      if("currentGame" in update.changes && update.currentGame) {
-        const newGameLogicalName = nameToLogical.get(update.currentGame.name);
-        if(!newGameLogicalName) {
-          LOGGER.error("Race state said to load game '%s', but that game has no computed logical name", update.currentGame.name);
-        }
-        else {
-          tipc.send("loadGame", newGameLogicalName);
-        }
-      }
-
-      if("phase" in update.changes && update.phase === "ENDED") {
-        tipc.send("raceEnded", update.participants);
-      }
+      Server.tipc().send("raceStateUpdate", {...update, roomName: data.roomName});
     },
   });
-
-  tipc.addHandler("completeGame", (participantName, gameLogicalName) => {
-    const stateSummary = raceState.getStateSummary();
-    const gameName = logicalToName.get(gameLogicalName);
-    if(!gameName) {
-      LOGGER.warn(`No game name mapping for for logical name ${gameLogicalName}. Requested by participant ${participantName}`);
-      return false;
-    }
-    if(stateSummary.phase !== "ACTIVE") {
-      LOGGER.warn(`Cannot complete a game unless the race is active. Race is currently %s`, stateSummary.phase);
-      return false;
-    }
-    raceState.completeGame(gameName, participantName);
-    raceState.swapGameIfPossible();
-    return true;
+  rooms.set(data.roomName, {
+    raceState,
+    name: data.roomName,
+    created: Date.now(),
+    key: data.roomKey,
+    adminKey: data.adminKey,
+    userKeys: new Map()
   });
-
-  initialized = true;
 }
 
-export function startRace() {
-  raceState.startRace();
+export function roomNameInUse(roomName: string) {
+  return rooms.has(roomName);
 }
 
-export function swapGame() {
-  raceState.swapGameIfPossible();
+export function listRooms() {
+  const roomList = [...rooms.values()];
+  roomList.sort((a,b) => {
+    return a.created - b.created;
+  });
+  return roomList.map(e => e.name);
+}
+
+export function getRoom(roomName: string|undefined): RoomOverview|undefined {
+  const room = rooms.get(roomName ?? "");
+  if(!room) {
+    return;
+  }
+  const raceState = room.raceState.getStateSummary();
+  return {
+    roomName: room.name,
+    created: room.created,
+    raceState: raceState,
+  };
+}
+
+export function joinRace(roomName: string, userName: string): {userKey: string}|undefined {
+  const room = rooms.get(roomName ?? "");
+  if(!room) {
+    return;
+  }
+  room.raceState.addParticipant(userName);
+  const userKey = generateUserKey(userName);
+  room.userKeys.set(userName, userKey);
+  return {userKey};
+}
+
+export function roomExists(roomName: string) {
+  return rooms.has(roomName);
+}
+
+export function usernameIsAvailable(roomName: string, userName: string) {
+  return rooms.get(roomName)?.userKeys.has(userName) === false;
+}
+
+export function hasAdminAccess(roomName: string, adminKey: string) {
+  return rooms.get(roomName)?.adminKey === adminKey;
+}
+
+export function hasRoomAccess(roomName: string, roomKey: string) {
+  return rooms.get(roomName)?.key === roomKey;
+}
+
+export function hasUserAccess(roomName: string, userName: string, userKey: string) {
+  return rooms.get(roomName)?.userKeys.get(userName) === userKey;
+}
+
+function generateUserKey(userName: string): string {
+  const sha = createHash('sha1');
+  const uuid = randomUUID();
+  return sha.update(userName+uuid).digest('hex');
 }

@@ -1,15 +1,4 @@
-<script setup lang="ts">
-import { RaceStateOverview } from '@grs/shared';
-import { ref } from 'vue';
-import StateView from './components/StateView.vue';
-import { getClient } from "./lib/TipcListener";
-
-const state = ref<RaceStateOverview>({games: [], participants: [], phase: "NEW"})
-getClient().addListener("raceStateUpdate", (update) => {
-  state.value = update;
-  console.log(update)
-})
-
+<script setup>
 </script>
 
 <template>
@@ -21,7 +10,8 @@ getClient().addListener("raceStateUpdate", (update) => {
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <StateView :state=state />
+  <div>----------------</div>
+  <RouterView />
 </template>
 
 <style scoped>
@@ -31,9 +21,11 @@ getClient().addListener("raceStateUpdate", (update) => {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }

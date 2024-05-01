@@ -22,10 +22,3 @@ export type RaceStateOverview = {
 export type RaceStateUpdate = RaceStateOverview & {
   changes: (keyof RaceStateOverview)[]
 }
-
-
-export type CreateRoomRequest = {
-  name: string,
-  password: string,
-  // TODO: Custom games as part of body
-}

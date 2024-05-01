@@ -1,9 +1,9 @@
-import * as TipcListener from './lib/TipcListener';
-
 import { createApp } from 'vue';
+import { router } from './scripts/Router';
+
 import './style.css';
 import App from './App.vue';
 
-await TipcListener.init();
-
-createApp(App).mount('#app');
+createApp(App)
+  .use(router)
+  .mount('#app');
