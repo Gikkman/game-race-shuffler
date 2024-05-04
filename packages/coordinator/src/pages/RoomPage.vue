@@ -24,6 +24,7 @@ TipcListener.init().then(async () => {
   TipcListener.getClient().addListener("raceStateUpdate", update => {
     if (update.roomName === roomName) {
       raceState.value = update
+      console.log(update)
     }
   });
 })
@@ -31,23 +32,33 @@ TipcListener.init().then(async () => {
 </script>
 
 <template>
-  <div>
-    <div v-if="connected">Connected</div>
-    <div v-else>Not Connected</div>
-  </div>
-  <div>
-    ----------------
-  </div>
-  <div v-if="ready">
-    <div v-if="raceState">
-      <RaceStateView :raceState />
-      <br>
-      <RaceControls :roomName />
+  <div class="main">
+    <div>
+      <div v-if="connected">Connected</div>
+      <div v-else>Not Connected</div>
     </div>
-    <h1 v-else>
-      Room not found
-    </h1>
+    <div>
+      ----------------
+    </div>
+    <div v-if="ready">
+      <div v-if="raceState">
+        <RaceStateView :raceState />
+        <br>
+        <RaceControls :roomName />
+      </div>
+      <h1 v-else>
+        Room not found
+      </h1>
+    </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+</style>

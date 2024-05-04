@@ -5,8 +5,6 @@ import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
 
 import { Logger, WebsocketContract, PathUtils } from '../../shared/dist/_index.js';
 
-import { ServerConfigService } from './ServerConfigService.js';
-
 const app = express();
 
 /************************************************************************
@@ -34,7 +32,7 @@ export async function init() {
   server.on('error', onError);
   server.on('listening', onListening);
   app.use((req,_,next) => {
-    if(req.path.startsWith("/assets")) {
+    if(req.path.startsWith("/assets") ||req.path === "/vite.svg") {
       LOGGER.debug(`%s -> %s`, req.method, req.path);
     }
     else {
@@ -97,21 +95,7 @@ async function setupWebSocket(server: Server) {
       error: TIPC_LOGGER.error,
       logLevel: TIPC_LOGGER.getLogLevel(),
     },
-    onNewConnection: (ws, request) => {
-      if(!request.url || !request.url.includes("?")) {
-        ws.close();
-        return LOGGER.info("New connection failed. No query params");
-      }
-      const url = new URL(request.url, `http://${request.headers.host}`);
-      const key = url.searchParams.get("key");
-      if(!key) {
-        ws.close();
-        return LOGGER.info("New connection failed. No key provided");
-      }
-      if(key !== ServerConfigService.getConnectionKey()) {
-        ws.close();
-        return LOGGER.info("New connection failed. Key missmatch. Got: %s", key);
-      }
+    onNewConnection: (ws) => {
       LOGGER.info("New client connected");
       ws.on('close', () => {
         LOGGER.info("Client disconnected");

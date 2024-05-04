@@ -56,11 +56,11 @@ export async function init() {
     if(!RoomManager.hasRoomAccess(body.roomName, body.roomKey)) {
       return res.status(401).send("Invalid room key");
     }
-    if(!RoomManager.usernameIsAvailable(body.roomName, body.participantName)) {
+    if(!RoomManager.usernameIsAvailable(body.roomName, body.userName)) {
       return res.status(400).send("User name already in use");
     }
     else {
-      const key = RoomManager.startRace(body.roomName);
+      const key = RoomManager.joinRace(body.roomName, body.userName);
       return res.status(200).json(key);
     }
   });
@@ -79,6 +79,21 @@ export async function init() {
       RoomManager.swapGame(body.roomName);
       return res.status(201).send();
     }
+  });
+
+  Server.tipc().addHandler("completeGame", (data) => {
+    const {roomName, userName, userKey, gameLogicalName} = data;
+    if(!RoomManager.hasUserAccess({roomName, userName, userKey})) {
+      LOGGER.warn("Could not mark game '%s' as complete in room '%s' by user '%s'. Invalid user key", data.gameLogicalName, data.roomName, data.userName);
+      return false;
+    }
+    const gameName = RoomManager.getGameNameForRace({roomName, gameLogicalName});
+    if(!gameName) {
+      LOGGER.warn("Could not mark game '%s' as complete in room %s by user '%s'. No game mapped to the logical name", data.gameLogicalName, data.roomName, data.userName);
+      return false;
+    }
+    RoomManager.completeGame(roomName, userName, gameName);
+    return true;
   });
 
   initialized = true;

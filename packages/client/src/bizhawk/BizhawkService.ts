@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 
-import { Logger, FunctionUtils, PathUtils } from '../../../shared/dist/_index.js';
+import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 
 import { getBizhawkLocation, getSaveStateLocation } from '../ClientConfigService.js';
 
@@ -30,7 +30,7 @@ enum BizhawkAction {
  ************************************************************************/
 const LOGGER = Logger.getLogger("BizhawkService");
 const BIZ_LOGGER = Logger.getLogger("Bizhawk.exe");
-const BLANK_GAME: GameData = {name: "No Game", absolutePath: ""};
+const BLANK_GAME: GameData = {gameName: "No Game", absolutePath: ""};
 const QUEUE: BizhawkEvent[] = [];
 
 let bizhawkProc: ChildProcess.ChildProcess | undefined;
@@ -127,7 +127,7 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
 
 function saveStateIfRunning(file: GameData) {
   if (file !== BLANK_GAME) {
-    const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
+    const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
     pushBizhawkEventQueue(BizhawkAction.SAVE, stateLocation);
   }
   else {
@@ -136,7 +136,7 @@ function saveStateIfRunning(file: GameData) {
 }
 
 function loadStateIfExists(file: GameData) {
-  const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
+  const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
   if (fs.existsSync(stateLocation)) {
     pushBizhawkEventQueue(BizhawkAction.LOAD, stateLocation);
   }
@@ -146,7 +146,7 @@ function loadStateIfExists(file: GameData) {
 }
 
 function deleteStateIfExists(file: GameData) {
-  const stateLocation = path.join(getSaveStateLocation(), file.name) + saveStateExtension;
+  const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
   if (fs.existsSync(stateLocation)) {
     // TODO: Move previous save state instead of just deleting
     fs.unlinkSync(stateLocation);
@@ -289,7 +289,7 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
       }
       LOGGER.info("Relauncing bizhawk. Attempt: " + restartCycleCount);
       intenalLaunchBizhawk();
-      LOGGER.info("Reloading game " + game.name);
+      LOGGER.info("Reloading game " + game.gameName);
       internalLoadGame(game, restartCycleCount);
     });
   });

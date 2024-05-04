@@ -1,8 +1,8 @@
 import { RaceParticipant, RaceStateUpdate } from "./Types.js";
 
 export interface WebsocketContract {
-  loadGame: string,
+  loadGame: {gameLogicalName: string, roomName: string},
   raceStateUpdate: RaceStateUpdate & {roomName: string},
-  raceEnded: RaceParticipant[]
-  completeGame: (participantName: string, gameLogicalName: string) => boolean,
+  raceEnded: {participants: RaceParticipant[], roomName: string}
+  completeGame: (data:{roomName: string, userName: string, gameLogicalName: string, userKey: string}) => boolean,
 }

@@ -1,53 +1,56 @@
 import fs from "node:fs";
 
-import { PathUtils } from "../../shared/dist/_index.js";
+import { PathUtils } from "@grs/shared";
 
 import * as CommandLineService from './CommandLineService.js';
 
 type ClientConfig = {
-  name: string;
+  userName: string;
   gameDir: string;
   saveDir: string;
   bizhawk: string;
-  key: string;
+  roomKey: string;
+  roomName: string;
 }
 
 let initialized = false;
 let saveStateLocation: string;
 let gameLocation: string;
 let bizhawkLocation: string;
-let clientName: string;
-let key: string;
+let userName: string;
+let roomKey: string;
+let roomName: string;
 
 export * as ClientConfigService from "./ClientConfigService.js";
 
 export function init() {
-  if(initialized) {
+  if (initialized) {
     return;
   }
 
-  const clientConfigPath = PathUtils.toAbsolutePath( CommandLineService.getClientConfigLocation(), PathUtils.pathRelativeToProjectRoot(""));
-  if(!fs.existsSync(clientConfigPath)) {
+  const clientConfigPath = PathUtils.toAbsolutePath(CommandLineService.getClientConfigLocation(), PathUtils.pathRelativeToProjectRoot(""));
+  if (!fs.existsSync(clientConfigPath)) {
     throw new Error("No file found at " + clientConfigPath);
   }
 
   const clientConfigContent = fs.readFileSync(clientConfigPath, "utf-8");
   const clientConfig = JSON.parse(clientConfigContent);
-  if(!typeGuardClientConfig(clientConfig)){
+  if (!typeGuardClientConfig(clientConfig)) {
     process.exit(1);
   }
 
-  clientName = clientConfig.name;
-  key = clientConfig.key;
+  userName = clientConfig.userName;
+  roomKey = clientConfig.roomKey;
+  roomName = clientConfig.roomName;
 
   saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir, clientConfigPath);
   PathUtils.ensureDir(saveStateLocation);
 
-  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir,  clientConfigPath);
+  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir, clientConfigPath);
   PathUtils.ensureDir(gameLocation);
 
   bizhawkLocation = PathUtils.toAbsolutePath(clientConfig.bizhawk, clientConfigPath);
-  if(!(PathUtils.existsSync(bizhawkLocation) && bizhawkLocation.endsWith("EmuHawk.exe"))){
+  if (!(PathUtils.existsSync(bizhawkLocation) && bizhawkLocation.endsWith("EmuHawk.exe"))) {
     throw new Error("Invalid Bizhawk path. Cannot find EmuHwak.exe at location " + bizhawkLocation);
   }
 
@@ -69,14 +72,19 @@ export function getSaveStateLocation(): string {
   return saveStateLocation;
 }
 
-export function getClientName(): string {
+export function getUserName(): string {
   ensureInitialized();
-  return clientName;
+  return userName;
 }
 
-export function getConnectionKey(): string {
+export function getRoomKey(): string {
   ensureInitialized();
-  return key;
+  return roomKey;
+}
+
+export function getRoomName(): string {
+  ensureInitialized();
+  return roomName;
 }
 /************************************************************************
 *  Internal Functions
@@ -87,28 +95,31 @@ function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
     return false;
   }
 
-  const { name, gameDir, saveDir, bizhawk, key } = obj as Partial<ClientConfig>;
+  const { userName, gameDir, saveDir, bizhawk, roomKey, roomName } = obj as Partial<ClientConfig>;
 
-  if(!(typeof name === 'string'    && name.length > 0)) {
-    throw new Error("Client config error! Missing property 'name'");
+  if (!(typeof userName === 'string' && userName.length > 0)) {
+    throw new Error("Client config error! Missing property 'userName'");
   }
-  if(!(typeof gameDir === 'string' && gameDir.length > 0)) {
+  if (!(typeof gameDir === 'string' && gameDir.length > 0)) {
     throw new Error("Client config error. Missing property 'gameDir'");
   }
-  if(!(typeof saveDir === 'string' && saveDir.length > 0)) {
+  if (!(typeof saveDir === 'string' && saveDir.length > 0)) {
     throw new Error("Client config error. Missing property 'saveDir'");
   }
-  if(!(typeof bizhawk === 'string' && bizhawk.length > 0)) {
+  if (!(typeof bizhawk === 'string' && bizhawk.length > 0)) {
     throw new Error("Client config error. Missing property 'bizhawk'");
   }
-  if(!(typeof key === 'string' && key.length > 0)) {
-    throw new Error("Client config error. Missing property 'key'");
+  if (!(typeof roomKey === 'string' && roomKey.length > 0)) {
+    throw new Error("Client config error. Missing property 'roomKey'");
+  }
+  if (!(typeof roomName === 'string' && roomName.length > 0)) {
+    throw new Error("Client config error. Missing property 'roomName'");
   }
   return true;
 }
 
 function ensureInitialized() {
-  if(!initialized) {
+  if (!initialized) {
     throw new Error("Module is not initialized: " + module.filename);
   }
 }

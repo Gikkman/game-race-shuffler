@@ -1,10 +1,10 @@
 export type RaceGame = {
-  name: string,
-  completedByParticipant?: string,
+  gameName: string,
+  completedByUser?: string,
 }
 
 export type RaceParticipant = {
-  name: string,
+  userName: string,
   score: number,
   leader: boolean,
   status: "DISCONNECTED"|"CONNECTED"

@@ -13,7 +13,7 @@ export type SwapGameRequest = {
 export type JoinRaceRequest = {
   roomName: string,
   roomKey: string,
-  participantName: string,
+  userName: string,
 }
 
 export type CreateRoomRequest = {

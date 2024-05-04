@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { PathUtils } from '../../shared/dist/_index.js';
+import { PathUtils } from '@grs/shared';
 
 import * as ClientConfigService from './ClientConfigService.js';
 import * as WebServer from './bizhawk/WebServer.js';
@@ -19,9 +19,6 @@ async function main() {
   await GameFinderService.init();
   await WebServer.init();
   await BizhawkController.init();
-
-  // Join room
-
   launchBizhawk(WebServer.getAddress().port);
 }
 main();

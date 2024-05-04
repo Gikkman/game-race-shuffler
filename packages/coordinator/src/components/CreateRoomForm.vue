@@ -4,10 +4,15 @@ import { createRoom } from '../scripts/ServerApi';
 import { CreateRoomRequest } from '@grs/shared';
 import { router } from '../scripts/Router';
 
-const roomName = ref("");
-const roomKey = ref("")
-const adminKey = ref("")
-const games = ref(new Set<string>())
+const roomName = ref("ESA2024");
+const roomKey = ref("KEY-HERE");
+const adminKey = ref("q1w2e3");
+const games = ref(new Set<string>([
+  "Super Mario Bros",
+  "StarTropics",
+  "Chip n Dale - Rescue Rangers",
+  "Snake Rattle n Roll"
+]))
 
 const newGame = ref("")
 

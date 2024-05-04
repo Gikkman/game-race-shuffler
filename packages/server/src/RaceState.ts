@@ -21,7 +21,7 @@ export default class RaceState {
     if (options.games.length < 1) {
       throw new Error("Cannot create race state. Number of games must be at least 1");
     }
-    this.games = options.games.map(e => ({ name: e }));
+    this.games = options.games.map(e => ({ gameName: e }));
     this.onStateUpdate = options.onStateUpdate ?? NOOP;
   }
 
@@ -38,38 +38,34 @@ export default class RaceState {
   }
 
   startRace() {
-    this.ensurePhase("NEW", "Could not start race");
     this.phase = "ACTIVE";
-    this.updateState("phase");
-    this.swapGameIfPossible();
+    this.swapGameIfPossible("phase");
   }
 
-  addParticipant(name: string) {
-    this.ensurePhase("NEW", "Could not add participant");
-    if (this.participants.find(e => e.name === name)) {
-      throw new Error(`Could not add participant. A participant named ${name} already exists`);
+  addParticipant(userName: string) {
+    if (this.participants.find(e => e.userName === userName)) {
+      return LOGGER.info(`Could not add participant. A user named %s already exists`, userName);
     }
-    this.participants.push({ name: name, score: 0, leader: false, status: "CONNECTED" });
+    this.participants.push({ userName, score: 0, leader: false, status: "CONNECTED" });
     this.updateState("participants");
+    return true;
   }
 
-  completeGame(gameName: string, completedByParticipant: string) {
-    this.ensurePhase("ACTIVE", "Could not mark game as completed");
-
-    const game = this.games.find(e => e.name === gameName);
+  completeGame(gameName: string, completedByUser: string) {
+    const game = this.games.find(e => e.gameName === gameName);
     if (!game) {
-      throw new Error(`Could not mark game as completed. No game named ${gameName} found`);
+      return LOGGER.warn(`Could not mark game '%s' as completed. No such game in the race`, gameName);
     }
-    if (game.completedByParticipant) {
-      throw new Error(`Could not mark game as completed. Game ${game.name} already marked as completed by participant ${game.completedByParticipant}`);
+    if (game.completedByUser) {
+      return LOGGER.warn(`Could not mark game as completed. Game '%s' already marked as completed by participant '%s'`, gameName, game.completedByUser);
     }
 
-    const participant = this.participants.find(e => e.name === completedByParticipant);
+    const participant = this.participants.find(e => e.userName === completedByUser);
     if (!participant) {
-      throw `Could not mark game as completed. No participant named ${completedByParticipant} found`;
+      return LOGGER.warn(`Could not mark game as completed. No user named '%s' registed in the race`, completedByUser);
     }
 
-    game.completedByParticipant = participant.name;
+    game.completedByUser = participant.userName;
 
     this.updateParticipantScores();
     if(this.isRaceCompleted()) {
@@ -77,39 +73,32 @@ export default class RaceState {
       this.updateState("participants", "phase");
     }
     else {
-      this.updateState("participants");
+      this.swapGameIfPossible("participants");
     }
   }
 
   setCurrentGame(gameName: string) {
-    this.ensurePhase("ACTIVE", "Could not set game as current game");
-
-    const game = this.games.find(e => e.name === gameName);
-    if (!game) {
-      throw new Error(`Could not set game as current game. No game named ${gameName} found`);
+    if(this.currentGame?.gameName === gameName) {
+      return LOGGER.info(`Could not set current game to %s. It is already the current game`, gameName);
     }
-    if (game.completedByParticipant) {
-      throw new Error(`Could not set game as current game. Game ${game.name} already marked as completed by participant ${game.completedByParticipant}`);
+    const nextGame = this.games.find(e => e.gameName === gameName);
+    if(!nextGame) {
+      return LOGGER.warn(`Could not set current game to %s. No such game in the race`, gameName);
     }
 
-    this.currentGame = game;
+    this.currentGame = nextGame;
     this.updateState("currentGame");
   }
 
-  swapGameIfPossible() {
-    if(this.phase !== "ACTIVE") {
-      return LOGGER.info("Swap not possible. Race has ended");
-    }
-
-    // The 'alternatives' array might be an empty here, and then 'nextGame' will be undefined
-    const alternatives = this.games.filter(game => game.completedByParticipant === undefined).filter(game => game !== this.currentGame);
+  swapGameIfPossible(...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
+    // The 'alternatives' array might be an empty here, if no more games are available, and then 'nextGame' will be undefined
+    const alternatives = this.games.filter(game => game.completedByUser === undefined).filter(game => game !== this.currentGame);
     const nextGame = alternatives[getRandomInt(alternatives.length)];
     if(!nextGame) {
-      return LOGGER.info("Swap not possible. No more games available");
+      return LOGGER.info("Could not swap game. No more games available");
     }
-
-    this.setCurrentGame(nextGame.name);
-    this.updateState("currentGame");
+    this.currentGame = nextGame;
+    this.updateState(...additionalStatesToSignal, "currentGame");
   }
 
 
@@ -126,7 +115,7 @@ export default class RaceState {
 
   private isRaceCompleted(): boolean {
     const gameCount = this.games.length;
-    const completedCount = this.games.reduce((acc, curr) => acc += (curr.completedByParticipant ? 1 : 0), 0);
+    const completedCount = this.games.reduce((acc, curr) => acc += (curr.completedByUser ? 1 : 0), 0);
 
     if (completedCount === gameCount) {
       return true;
@@ -139,7 +128,7 @@ export default class RaceState {
     const mostScore = { name: [] as string[], score: 0 as number };
 
     for (const game of this.games) {
-      const completerName = game.completedByParticipant;
+      const completerName = game.completedByUser;
       if (completerName) {
         const participantScore = (participantScores[completerName] ?? 0) + 1;
         participantScores[completerName] = participantScore;
@@ -155,8 +144,8 @@ export default class RaceState {
     }
 
     for(const p of this.participants) {
-      p.leader = (p.name in mostScore.name);
-      p.score = participantScores[p.name] ?? 0;
+      p.leader = (mostScore.name.includes(p.userName));
+      p.score = participantScores[p.userName] ?? 0;
     }
   }
 

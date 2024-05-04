@@ -4,7 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc/cjs';
 import { AddressInfo } from 'ws';
 
-import { WebsocketContract, Logger, FunctionUtils } from '../../../shared/dist/_index.js';
+import { WebsocketContract, Logger, FunctionUtils, JoinRaceRequest } from '@grs/shared';
 
 import { ClientConfigService } from '../ClientConfigService.js';
 
@@ -15,6 +15,7 @@ let initialized = false;
 const LOGGER = Logger.getLogger("Server");
 const app = express();
 let server: Server;
+let room: {userKey: string};
 
 const TIPC_LOGGER = Logger.getLogger();
 let tipcNsClient: TipcNamespaceClient<WebsocketContract>;
@@ -23,11 +24,11 @@ let tipcNsClient: TipcNamespaceClient<WebsocketContract>;
  *  Module Functions
  ************************************************************************/
 
-export async function init() {
+export async function init(): Promise<void> {
   if (initialized) {
     return;
   }
-  const connectKey = ClientConfigService.getConnectionKey();
+  const connectKey = ClientConfigService.getRoomKey();
   const tipcConnectionManager = TipcNodeClient.create({
     host: "127.0.0.1",
     port: 47911,
@@ -59,7 +60,7 @@ export async function init() {
   const tipcClient = await tipcConnectionManager.connect();
   tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
 
-  const promise = new Promise<void>((res) => {
+  await new Promise<void>((res) => {
     try {
       // Start server
       server = app.listen(0, "127.0.0.1");
@@ -77,16 +78,19 @@ export async function init() {
         server?.close();
         tipcClient?.shutdown();
       });
-
     }
     catch (err) {
       LOGGER.error(err as Error);
       process.exit(1);
     }
-    initialized = true;
   });
 
-  return promise;
+  const userName = ClientConfigService.getUserName();
+  const roomName = ClientConfigService.getRoomName();
+  const roomKey = ClientConfigService.getRoomKey();
+  room = await joinRoomRequest("127.0.0.1:47911", {roomKey, roomName, userName});
+
+  initialized = true;
 }
 
 export function bindGet(url: string, callback: express.RequestHandler) {
@@ -111,6 +115,11 @@ export function tipc() {
 export function getAddress() {
   ensureInitialized();
   return server.address() as AddressInfo;
+}
+
+export function getUserKey() {
+  ensureInitialized();
+  return room.userKey;
 }
 
 /************************************************************************
@@ -148,4 +157,21 @@ function ensureInitialized() {
   if(!initialized) {
     throw new Error("Module is not initialized: " + module.filename);
   }
+}
+
+async function joinRoomRequest(host: string, data: JoinRaceRequest): Promise<{userKey: string}> {
+  const res = await fetch(`http://${host}/api/room/${data.roomName}/join`, {
+    method: "POST",
+    redirect: 'follow',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+    .then(response=>response.json())
+    .catch(e => {
+      LOGGER.error(e);
+      process.exit(1);
+    });
+  return res;
 }

@@ -1,4 +1,4 @@
 type GameData = {
   absolutePath: string;
-  name: string;
+  gameName: string;
 }

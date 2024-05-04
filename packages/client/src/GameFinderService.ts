@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { FunctionUtils, PathUtils } from '../../shared/dist/_index.js';
+import { FunctionUtils, PathUtils } from '@grs/shared';
 
 import { ClientConfigService } from "./ClientConfigService.js";
 
@@ -43,8 +43,8 @@ function calculateAbsolutePath(file: fs.Dirent, gameLocation: string) {
   return PathUtils.toAbsolutePath(file.name, gameLocation);
 }
 
-function fileToName(p: string): GameData {
-  const fileName = path.basename(p);
+function fileToName(absolutePath: string): GameData {
+  const fileName = path.basename(absolutePath);
   let firstParanthesis = Number.MAX_SAFE_INTEGER;
   let firstBracket = Number.MAX_SAFE_INTEGER;
   let lastDot = Number.MAX_SAFE_INTEGER;
@@ -61,11 +61,11 @@ function fileToName(p: string): GameData {
     }
   }
   const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) ).trim();
-  return {absolutePath: p, name: gameName};
+  return {absolutePath, gameName};
 }
 
 function calculateLogicalName(game: GameData): {logicalName: string, game: GameData}{
-  const logicalName = FunctionUtils.calculateLogicalName(game.name);
+  const logicalName = FunctionUtils.calculateLogicalName(game.gameName);
   return {logicalName, game};
 }
 
