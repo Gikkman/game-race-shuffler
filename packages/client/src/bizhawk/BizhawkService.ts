@@ -261,15 +261,13 @@ function checkBizhawkHealth(game: GameData, restartCycleCount: number, process?:
     bizhawkHealthTimeout(game, restartCycleCount, process);
     // Give longer timeout if we're in a restart, cause we gotta start the Bizhawk process too
   }, 5_000 + (restartCycleCount ? 3_000 : 0));
+  clearTimeout(healthCheckTimeout);
   healthCheckTimeout = timeout;
 }
 
 export function bizhawkPong() {
   LOGGER.info("Bizhawk pong. Health check passed");
-  if (healthCheckTimeout) {
-    clearTimeout(healthCheckTimeout);
-  }
-  healthCheckTimeout = undefined;
+  clearTimeout(healthCheckTimeout);
 }
 
 async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, process: ChildProcess.ChildProcess) {
