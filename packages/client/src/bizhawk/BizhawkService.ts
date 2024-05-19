@@ -92,7 +92,7 @@ export function popBizhawkEventQueue(): BizhawkEvent | undefined {
 
 export function launchBizhawk(serverPort: number) {
   bizhawkCallPort = serverPort;
-  intenalLaunchBizhawk();
+  internalLaunchBizhawk();
 }
 
 export function getCurrentGame(): GameData {
@@ -170,7 +170,7 @@ function pushBizhawkEventQueue(action: BizhawkAction, path: string = "") {
  ************************************************************************/
 let launched = false;
 let launchTime: Date;
-function intenalLaunchBizhawk() {
+function internalLaunchBizhawk() {
   if (launched) {
     return;
   }
@@ -243,7 +243,7 @@ function hashGame(game: GameData) {
 /************************************************************************
  *  Bizhawk health method
  *
- * The reason for this function is that sometimes, Bizhawk failes to load
+ * The reason for this function is that sometimes, Bizhawk fails to load
  * a save state and the LUA script crashes and we loose the ability to
  * control Bizhawk remotely. To fix this, we request that Bizhawk sends
  * a PONG to us when we load a game, within 5 seconds. If it doesn't, we
@@ -287,8 +287,8 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
         LOGGER.error("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absolutePath);
         return;
       }
-      LOGGER.info("Relauncing bizhawk. Attempt: " + restartCycleCount);
-      intenalLaunchBizhawk();
+      LOGGER.info("Relaunching bizhawk. Attempt: " + restartCycleCount);
+      internalLaunchBizhawk();
       LOGGER.info("Reloading game " + game.gameName);
       internalLoadGame(game, restartCycleCount);
     });
