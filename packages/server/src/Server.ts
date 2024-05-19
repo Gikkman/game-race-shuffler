@@ -3,7 +3,7 @@ import { Server } from 'http';
 import history from "connect-history-api-fallback";
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
 
-import { Logger, WebsocketContract, PathUtils } from '../../shared/dist/_index.js';
+import { Logger, WebsocketContract, PathUtils } from '@grs/shared';
 
 const app = express();
 

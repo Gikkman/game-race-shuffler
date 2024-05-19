@@ -6,19 +6,36 @@ export async function getRoomList(): Promise<string[]> {
 }
 
 export async function getRoom(roomName: string): Promise<RoomOverview> {
-  const res = await fetch("/api/room/"+roomName);
+  const res = await fetch("/api/room/" + roomName);
   return res.json();
 }
 
-export async function createRoom(data: CreateRoomRequest): Promise<boolean> {
-  const res = await fetch("/api/room", {
+export async function createRoom(data: CreateRoomRequest): Promise<{ adminKey: string } | false> {
+  return fetch("/api/room", {
     method: "POST",
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(data)
-  });
-  return res.ok;
+  })
+    .then(async res => {
+      if (res.ok) {
+        return res.json();
+      }
+      else {
+        throw await res.text();
+      }
+    })
+    .then(res => {
+      if (res && typeof res === "object" && 'adminKey' in res) {
+        return res;
+      }
+      return false;
+    })
+    .catch(ex => {
+      console.error(ex);
+      return false;
+    });
 }
 
 export async function startRace(data: StartRaceRequest): Promise<boolean> {

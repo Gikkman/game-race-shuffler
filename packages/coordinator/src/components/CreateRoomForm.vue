@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { createRoom } from '../scripts/ServerApi';
+import { storeAdminKey } from '../scripts/KeyValueStore';
 import { CreateRoomRequest } from '@grs/shared';
 import { router } from '../scripts/Router';
 
 const roomName = ref("ESA2024");
 const roomKey = ref("KEY-HERE");
-const adminKey = ref("q1w2e3");
 const games = ref(new Set<string>([
   "Super Mario Bros",
   "StarTropics",
@@ -20,10 +20,11 @@ async function submit() {
   const data: CreateRoomRequest = {
     roomName: roomName.value,
     roomKey: roomKey.value,
-    adminKey: adminKey.value,
     games: [...games.value]
   }
-  if (await createRoom(data)) {
+  const res = await createRoom(data);
+  if (res) {
+    storeAdminKey(roomName.value, res.adminKey)
     await router.push(`/room/${roomName.value}`)
   }
 }
@@ -41,20 +42,39 @@ function removeGame(name: string) {
 </script>
 
 <template>
-  <input name="room-name" v-model="roomName" placeholder="Room name" />
-  <input name="room-key" v-model="roomKey" type="password" placeholder="Room password" />
-  <input name="admin-key" v-model="adminKey" type="password" placeholder="Room admin password" />
-  <div v-for="game in games">
-    <span>{{ game }}</span><button @click="removeGame(game)">X</button>
+  <div class="pane-v">
+    <h2>Create Room</h2>
+    <div class="pane-h">
+      <input name="room-name" v-model="roomName" placeholder="Room name" />
+      <input name="room-key" v-model="roomKey" type="password" placeholder="Room password" />
+    </div>
+    <div class="pane-h">
+      <input class="game-input" name="new-game" v-model="newGame" placeholder="Game name" />
+      <button @click="addGame">Add</button>
+    </div>
+    <table class="games">
+      <tr v-for="game in games">
+        <td class="game-title">{{ game }}</td>
+        <td class="game-button"><button @click="removeGame(game)">X</button></td>
+      </tr>
+    </table>
+    <div>
+      <button @click="submit" type="submit">Create</button>
+    </div>
   </div>
-  <input name="new-game" v-model="newGame" placeholder="Game name" />
-  <button @click="addGame">Add</button>
-
-  <button @click="submit" type="submit">Create</button>
 </template>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
+.game-input {
+  width: 80%;
+}
+.games {
+  width: 100%;
+}
+.game-title {
+  text-align: left;
+}
+.game-button {
+  width: 1%;
 }
 </style>

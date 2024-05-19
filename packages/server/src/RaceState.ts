@@ -1,10 +1,16 @@
 import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview } from "@grs/shared";
-const NOOP = (..._: unknown[]) => { };
-
-type RaceStateOptions = {
+type RaceStateArgs = {
   games: string[],
-  onStateUpdate?: (update: RaceStateUpdate) => void,
 }
+
+export type RaceStateData = {
+  participants: RaceParticipant[],
+  phase: RacePhase,
+  games: RaceGame[],
+  currentGame?: RaceGame,
+}
+
+export type StateUpdateCallback = (update: RaceStateUpdate) => void;
 
 const LOGGER = Logger.getLogger("RaceState");
 
@@ -12,17 +18,23 @@ export default class RaceState {
   private participants: RaceParticipant[] = [];
   private phase: RacePhase = "NEW";
   private games: RaceGame[];
-
   private currentGame?: RaceGame;
+  private onStateUpdate: StateUpdateCallback;
 
-  private onStateUpdate: (update: RaceStateUpdate) => void;
-
-  constructor(options: RaceStateOptions) {
-    if (options.games.length < 1) {
-      throw new Error("Cannot create race state. Number of games must be at least 1");
+  constructor(args: RaceStateArgs|RaceStateData, onStateUpdate: StateUpdateCallback) {
+    if("phase" in args) {
+      this.participants = args.participants;
+      this.phase = args.phase;
+      this.games = args.games;
+      this.currentGame = args.currentGame;
     }
-    this.games = options.games.map(e => ({ gameName: e }));
-    this.onStateUpdate = options.onStateUpdate ?? NOOP;
+    else {
+      if (args.games.length < 1) {
+        throw new Error("Cannot create race state. Number of games must be at least 1");
+      }
+      this.games = args.games.map(e => ({ gameName: e }));
+    }
+    this.onStateUpdate = onStateUpdate;
   }
 
   /************************************************************************
@@ -101,6 +113,14 @@ export default class RaceState {
     this.updateState(...additionalStatesToSignal, "currentGame");
   }
 
+  serialize(): RaceStateData {
+    return {
+      currentGame: this.currentGame,
+      games: this.games,
+      phase: this.phase,
+      participants: this.participants,
+    };
+  }
 
   /************************************************************************
   *  Private methods

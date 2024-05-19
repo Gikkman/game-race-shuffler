@@ -1,4 +1,4 @@
-import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, JoinRaceRequest, SwapGameRequest } from '@grs/shared';
+import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest } from '@grs/shared';
 
 import * as Server from './Server.js';
 import * as RoomManager from './RoomManager.js';
@@ -16,7 +16,7 @@ export async function init() {
   });
 
   Server.bindGet("/api/room/:name", (req, res) => {
-    const room = RoomManager.getRoom(req.params['name']);
+    const room = RoomManager.getRoomOverview(req.params['name']);
     if(!room) {
       return res.status(404).send("No such room found");
     }
@@ -29,70 +29,74 @@ export async function init() {
     if(!isCreateRoomRequest(body)) {
       return res.status(400).send("Invalid request format");
     }
-    RoomManager.createRoom(body);
-    return res.status(201).send();
+    const adminKey = RoomManager.createRoom(body);
+    return res.status(201).json(adminKey);
   });
 
   Server.bindPost("/api/room/:name/start", (req,res) => {
     const body = req.body as StartRaceRequest;
-    LOGGER.info(`Request to start race: ${body.roomName}`);
-    if(!RoomManager.roomExists(body.roomName)) {
+    const {roomName, adminKey} = body;
+    LOGGER.info(`Request to start race: ${roomName}`);
+    const room = RoomManager.roomExists(roomName);
+    if(!room) {
       return res.status(400).send("Room not found");
     }
-    if(!RoomManager.hasAdminAccess(body.roomName, body.adminKey)) {
+    if(!RoomManager.hasAdminAccess(room, adminKey)) {
       return res.status(401).send("Invalid room key");
     }
-    RoomManager.startRace(body.roomName);
+    RoomManager.startRace(room);
     return res.status(201).send();
-  });
-
-  Server.bindPost("/api/room/:name/join", (req,res) => {
-    const body = req.body as JoinRaceRequest;
-    LOGGER.info(`Request to join race: ${body.roomName}`);
-
-    if(!RoomManager.roomExists(body.roomName)) {
-      return res.status(400).send("Room not found");
-    }
-    if(!RoomManager.hasRoomAccess(body.roomName, body.roomKey)) {
-      return res.status(401).send("Invalid room key");
-    }
-    if(!RoomManager.usernameIsAvailable(body.roomName, body.userName)) {
-      return res.status(400).send("User name already in use");
-    }
-    else {
-      const key = RoomManager.joinRace(body.roomName, body.userName);
-      return res.status(200).json(key);
-    }
   });
 
   Server.bindPost("/api/room/:name/swap", (req,res) => {
     const body = req.body as SwapGameRequest;
     LOGGER.info(`Request to swap game: ${body.roomName}`);
 
-    if(!RoomManager.roomExists(body.roomName)) {
+    const room = RoomManager.roomExists(body.roomName);
+    if(!room) {
       return res.status(400).send("Room not found");
     }
-    if(!RoomManager.hasAdminAccess(body.roomName, body.adminKey)) {
+    if(!RoomManager.hasAdminAccess(room, body.adminKey)) {
       return res.status(401).send("Invalid room key");
     }
-    else {
-      RoomManager.swapGame(body.roomName);
-      return res.status(201).send();
+    RoomManager.swapGame(room);
+    return res.status(201).send();
+  });
+
+  Server.tipc().addHandler("joinRace", (data) => {
+    const {roomName, roomKey, userName} = data;
+    LOGGER.info(`Request to join race: ${roomName}`);
+    const room = RoomManager.roomExists(roomName);
+    if(!room) {
+      throw new Error("Room not found");
     }
+    if(!RoomManager.hasRoomAccess(room, roomKey)) {
+      throw new Error("Invalid room key");
+    }
+    if(!RoomManager.usernameIsAvailable(room, userName)) {
+      throw new Error("User name already in use");
+    }
+    const userKey = RoomManager.joinRace(room, userName);
+    return userKey;
   });
 
   Server.tipc().addHandler("completeGame", (data) => {
     const {roomName, userName, userKey, gameLogicalName} = data;
-    if(!RoomManager.hasUserAccess({roomName, userName, userKey})) {
+    const room = RoomManager.roomExists(roomName);
+    if(!room) {
+      LOGGER.warn("Could not mark game '%s' as complete in room '%s' by user '%s'. No such room", data.gameLogicalName, data.roomName, data.userName);
+      return false;
+    }
+    if(!RoomManager.hasUserAccess(room, userName, userKey)) {
       LOGGER.warn("Could not mark game '%s' as complete in room '%s' by user '%s'. Invalid user key", data.gameLogicalName, data.roomName, data.userName);
       return false;
     }
-    const gameName = RoomManager.getGameNameForRace({roomName, gameLogicalName});
+    const gameName = RoomManager.getGameNameForRace(room, gameLogicalName);
     if(!gameName) {
       LOGGER.warn("Could not mark game '%s' as complete in room %s by user '%s'. No game mapped to the logical name", data.gameLogicalName, data.roomName, data.userName);
       return false;
     }
-    RoomManager.completeGame(roomName, userName, gameName);
+    RoomManager.completeGame(room, userName, gameName);
     return true;
   });
 

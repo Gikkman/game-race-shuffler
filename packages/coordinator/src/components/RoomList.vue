@@ -12,16 +12,19 @@ updateRooms()
 </script>
 
 <template>
-  <h2>Room List</h2>
-  <ul>
-    <li v-for="room in rooms">
-      <RouterLink :to="'/room/' + room">{{ room }}</RouterLink>
-    </li>
-  </ul>
+  <div class="pane-v">
+    <h2>Room List</h2>
+    <ul class="rooms">
+      <li v-for="room in rooms">
+        <RouterLink :to="'/room/' + room">{{ room }}</RouterLink>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
+.rooms {
+  list-style: none;
+  padding: 0px;
 }
 </style>

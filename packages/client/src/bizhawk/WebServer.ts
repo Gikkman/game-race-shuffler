@@ -4,7 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import { TipcNamespaceClient, TipcNodeClient } from 'tipc/cjs';
 import { AddressInfo } from 'ws';
 
-import { WebsocketContract, Logger, FunctionUtils, JoinRaceRequest } from '@grs/shared';
+import { WebsocketContract, Logger, FunctionUtils } from '@grs/shared';
 
 import { ClientConfigService } from '../ClientConfigService.js';
 
@@ -84,13 +84,14 @@ export async function init(): Promise<void> {
       process.exit(1);
     }
   });
+  initialized = true;
+}
 
+export async function joinRace() {
   const userName = ClientConfigService.getUserName();
   const roomName = ClientConfigService.getRoomName();
   const roomKey = ClientConfigService.getRoomKey();
-  room = await joinRoomRequest("127.0.0.1:47911", {roomKey, roomName, userName});
-
-  initialized = true;
+  room = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName});
 }
 
 export function bindGet(url: string, callback: express.RequestHandler) {
@@ -157,21 +158,4 @@ function ensureInitialized() {
   if(!initialized) {
     throw new Error("Module is not initialized: " + module.filename);
   }
-}
-
-async function joinRoomRequest(host: string, data: JoinRaceRequest): Promise<{userKey: string}> {
-  const res = await fetch(`http://${host}/api/room/${data.roomName}/join`, {
-    method: "POST",
-    redirect: 'follow',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  })
-    .then(response=>response.json())
-    .catch(e => {
-      LOGGER.error(e);
-      process.exit(1);
-    });
-  return res;
 }

@@ -1,9 +1,16 @@
 <script async setup lang="ts">
 import { ref } from "vue";
 import * as ServerApi from "../scripts/ServerApi";
+import { getAdminKey } from "../scripts/KeyValueStore";
 
 const props = defineProps<{ roomName: string }>();
-const adminKey = ref<string>();
+const adminKey = ref( getAdminKey(props.roomName) );
+const adminKeyFieldDisabled = ref(!!adminKey.value);
+
+function copyAdminKey() {
+  if(adminKey.value)
+    navigator.clipboard.writeText(adminKey.value)
+}
 
 function startRace() {
   if(!adminKey.value) {
@@ -26,12 +33,21 @@ function swapGame() {
 </script>
 
 <template>
-  <div>
-    <input name="adminKey" v-model="adminKey" type="password" placeholder="Admin Key">
-    <button @click="startRace">Start</button>
-    <button @click="swapGame">Swap</button>
+  <div class="pane-v">
+    <div class="pane-h">
+      <button :disabled="!adminKey" @click="startRace">Start</button>
+      <button :disabled="!adminKey" @click="swapGame">Swap</button>
+    </div>
+    <div>
+      <h3>Admin Key</h3>
+    </div>
+    <div class="pane-h">
+        <input name="adminKey" :disabled="adminKeyFieldDisabled" v-model="adminKey" type="password" placeholder="Admin Key">
+        <button :disabled="!adminKey" @click="copyAdminKey">COPY</button>
+    </div>
   </div>
 </template>
 
 <style scoped>
+
 </style>

@@ -20,5 +20,7 @@ async function main() {
   await WebServer.init();
   await BizhawkController.init();
   launchBizhawk(WebServer.getAddress().port);
+
+  await WebServer.joinRace();
 }
 main();

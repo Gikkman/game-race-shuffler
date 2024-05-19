@@ -12,7 +12,7 @@
     "@grs/shared": "^1.0.0",
     "connect-history-api-fallback": "^2.0.0",
     "express": "^4.18.2",
-    "tipc": "^2.0.3",
+    "tipc": "^2.1.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {

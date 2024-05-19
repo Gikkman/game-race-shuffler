@@ -5,19 +5,24 @@
   <RouterView />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<style>
+.pane-v {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 16px;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.pane-h {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+input {
+  height: 25px;
 }
 </style>

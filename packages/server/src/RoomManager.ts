@@ -1,23 +1,12 @@
 import { randomUUID, createHash } from "crypto";
-import { CreateRoomRequest, FunctionUtils, RoomOverview } from '@grs/shared';
+import { CreateRoomRequest, FunctionUtils, RaceStateUpdate, RoomOverview } from '@grs/shared';
 import * as Server from './Server.js';
-import RaceState from './RaceState.js';
+import RoomState from "./RoomState.js";
 
 
 /************************************************************************
 *  Setup stuff
 ************************************************************************/
-
-type RoomState = {
-  raceState: RaceState,
-  created: number,
-  name: string,
-  key: string,
-  adminKey: string,
-  userKeys: Record<string, string>,
-  gameNameToLogicalName: Record<string, string>,
-  logicalNameToGameName: Record<string, string>,
-}
 
 const rooms = new Map<string, RoomState>();
 
@@ -25,49 +14,31 @@ const rooms = new Map<string, RoomState>();
 *  Exported function
 ************************************************************************/
 
-export function startRace(roomName: string) {
-  rooms.get(roomName)?.raceState.startRace();
+export function startRace(room: RoomState) {
+  room.raceState.startRace();
 }
 
-export function swapGame(roomName: string) {
-  rooms.get(roomName)?.raceState.swapGameIfPossible();
+export function swapGame(room: RoomState) {
+  room.raceState.swapGameIfPossible();
 }
 
 export function createRoom(data: CreateRoomRequest) {
   const {roomName} = data;
-  const raceState = new RaceState({
-    games: data.games,
-    onStateUpdate(update) {
-      Server.tipc().send("raceStateUpdate", {...update, roomName});
-      if(update.changes.includes("currentGame") && update.currentGame) {
-        const gameLogicalName = FunctionUtils.calculateLogicalName(update.currentGame.gameName);
-        Server.tipc().send("loadGame", {roomName, gameLogicalName});
-      }
-      if(update.changes.includes("phase") && update.phase === "ENDED") {
-        const participants = update.participants;
-        Server.tipc().send("raceEnded", {roomName, participants});
-      }
-    },
-  });
-
-  const gameNameToLogicalName: Record<string,string> = {};
-  const logicalNameToGameName: Record<string,string> = {};
-  for(const gameName of data.games) {
-    const logicalName = FunctionUtils.calculateLogicalName(gameName);
-    logicalNameToGameName[logicalName] = gameName;
-    gameNameToLogicalName[gameName] = logicalName;
-  }
-
-  rooms.set(data.roomName, {
-    raceState,
-    name: data.roomName,
-    created: Date.now(),
-    key: data.roomKey,
-    adminKey: data.adminKey,
-    userKeys: {},
-    gameNameToLogicalName,
-    logicalNameToGameName,
-  });
+  const stateUpdateCallback = (update: RaceStateUpdate) => {
+    Server.tipc().send("raceStateUpdate", {...update, roomName});
+    if(update.changes.includes("currentGame") && update.currentGame) {
+      const gameLogicalName = FunctionUtils.calculateLogicalName(update.currentGame.gameName);
+      Server.tipc().send("loadGame", {roomName, gameLogicalName});
+    }
+    if(update.changes.includes("phase") && update.phase === "ENDED") {
+      const participants = update.participants;
+      Server.tipc().send("raceEnded", {roomName, participants});
+    }
+  };
+  const adminKey = randomUUID();
+  const roomState = new RoomState({...data, adminKey}, stateUpdateCallback);
+  rooms.set(roomName, roomState);
+  return {adminKey};
 }
 
 export function roomNameInUse(roomName: string) {
@@ -79,63 +50,55 @@ export function listRooms() {
   roomList.sort((a,b) => {
     return a.created - b.created;
   });
-  return roomList.map(e => e.name);
+  return roomList.map(e => e.roomName);
 }
 
-export function getRoom(roomName: string|undefined): RoomOverview|undefined {
+export function getRoomOverview(roomName: string|undefined): RoomOverview|undefined {
   const room = rooms.get(roomName ?? "");
   if(!room) {
     return;
   }
   const raceState = room.raceState.getStateSummary();
   return {
-    roomName: room.name,
+    roomName: room.roomName,
     created: room.created,
     raceState: raceState,
   };
 }
 
-export function joinRace(roomName: string, userName: string): {userKey: string}|undefined {
-  const room = rooms.get(roomName ?? "");
-  if(!room) {
-    return;
-  }
+export function joinRace(room: RoomState, userName: string): {userKey: string} {
   room.raceState.addParticipant(userName);
   const userKey = generateUserKey(userName);
   room.userKeys[userName] = userKey;
   return {userKey};
 }
 
-export function completeGame(roomName: string, userName: string, gameName: string) {
-  const room = rooms.get(roomName);
-  if(!room) {
-    return;
-  }
+export function completeGame(room: RoomState, userName: string, gameName: string) {
   room.raceState.completeGame(gameName, userName);
 }
 
-export function roomExists(roomName: string) {
-  return rooms.has(roomName);
+export function roomExists(roomName: string): Readonly<RoomState>|undefined {
+  return rooms.get(roomName);
 }
 
-export function usernameIsAvailable(roomName: string, userName: string) {
-  return rooms.get(roomName)?.userKeys[userName] === undefined;
+export function usernameIsAvailable(room: RoomState, userName: string) {
+  return room.userKeys[userName] === undefined;
 }
 
-export function hasAdminAccess(roomName: string, adminKey: string) {
-  return rooms.get(roomName)?.adminKey === adminKey;
+export function hasAdminAccess(room: RoomState, adminKey: string) {
+  return room.adminKey === adminKey;
 }
 
-export function hasRoomAccess(roomName: string, roomKey: string) {
-  return rooms.get(roomName)?.key === roomKey;
+export function hasRoomAccess(room: RoomState, roomKey: string) {
+  return room.roomKey === roomKey;
 }
 
-export function hasUserAccess(args: {roomName: string, userName: string, userKey: string}) {
-  return rooms.get(args.roomName)?.userKeys[args.userName] === args.userKey;
+export function hasUserAccess(room: RoomState, userName: string, userKey: string) {
+  return room.userKeys[userName] === userKey;
 }
 
-export function getGameNameForRace(args: {roomName: string, gameLogicalName: string}) {
-  return rooms.get(args.roomName)?.logicalNameToGameName[args.gameLogicalName];
+export function getGameNameForRace(room: RoomState, gameLogicalName: string) {
+  return room.logicalNameToGameName[gameLogicalName];
 }
 
 function generateUserKey(userName: string): string {
