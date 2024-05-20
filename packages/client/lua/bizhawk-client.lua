@@ -50,7 +50,7 @@ while true do
     request()
   end
 
-  if (frameCount > 180 and gameLoaded == true and gameCompleted == false and input.get()["Space"]) then
+  if (frameCount > 120 and gameLoaded == true and gameCompleted == false and input.get()["Space"]) then
     print("INPUT: Game completed at frame " .. frameCount)
     comm.httpPost(url .. "/complete", "")
     gameCompleted = true

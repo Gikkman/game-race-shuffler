@@ -57,7 +57,10 @@ export async function init(): Promise<void> {
     }
   });
 
-  const tipcClient = await tipcConnectionManager.connect();
+  const tipcClient = await tipcConnectionManager.connect().catch(() => {
+    console.error("Could not connect TIPC to remote server. Is server alive?");
+    process.exit(1);
+  });
   tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");
 
   await new Promise<void>((res) => {
@@ -80,6 +83,7 @@ export async function init(): Promise<void> {
       });
     }
     catch (err) {
+      LOGGER.error("Error starting local server to listen for Bizhawk actions");
       LOGGER.error(err as Error);
       process.exit(1);
     }
@@ -91,7 +95,10 @@ export async function joinRace() {
   const userName = ClientConfigService.getUserName();
   const roomName = ClientConfigService.getRoomName();
   const roomKey = ClientConfigService.getRoomKey();
-  const joinData = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName});
+  const joinData = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName}).catch(e => {
+    LOGGER.error(e);
+    process.exit(1);
+  });
   room = {userKey: joinData.userKey};
 }
 

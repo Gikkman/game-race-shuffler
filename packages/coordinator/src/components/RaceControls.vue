@@ -16,25 +16,30 @@ function startRace() {
   if(!adminKey.value) {
     return;
   }
-  ServerApi.startRace({
-    roomName: props.roomName,
-    adminKey: adminKey.value,
-  })
+  if(confirm("Really start race?")) {
+    ServerApi.startRace({
+      roomName: props.roomName,
+      adminKey: adminKey.value,
+    })
+  }
 }
 function swapGame() {
   if(!adminKey.value) {
     return;
   }
-  ServerApi.swapGame({
-    roomName: props.roomName,
-    adminKey: adminKey.value,
-  })
+  if(confirm("Really swap game?")) {
+    ServerApi.swapGame({
+      roomName: props.roomName,
+      adminKey: adminKey.value,
+    })
+  }
 }
 </script>
 
 <template>
   <div class="pane-v">
     <div class="pane-h">
+
       <button :disabled="!adminKey" @click="startRace">Start</button>
       <button :disabled="!adminKey" @click="swapGame">Swap</button>
     </div>

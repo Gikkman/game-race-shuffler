@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 
-import { getBizhawkLocation, getSaveStateLocation } from '../ClientConfigService.js';
+import { getBizhawkLocation, getSaveStateLocation, getUserName } from '../ClientConfigService.js';
 
 /************************************************************************
  *  Types
@@ -184,7 +184,12 @@ function internalLaunchBizhawk() {
     const luaPath = getLuaPath();
     const params = ["--lua=" + luaPath, `--url_get=${bizhawkCallPort}`];
 
-    const proc = ChildProcess.spawn(bizhawkPath, params, { windowsHide: true, env: process.env, cwd: bizhawkCwd });
+    const specialConfigPath = getPotentialSpecialConfigPath(bizhawkCwd);
+    if(specialConfigPath) {
+      params.push(specialConfigPath);
+    }
+
+    const proc = ChildProcess.spawn(bizhawkPath, params, { windowsHide: false, env: process.env, cwd: bizhawkCwd });
 
     proc.stdout.on('data', (data) => {
       BIZ_LOGGER.debug(`[%s] %s`,launchTime, data.toString('utf8'));
@@ -256,7 +261,7 @@ function checkBizhawkHealth(game: GameData, restartCycleCount: number, process?:
   } // In case we loaded a game with bizhawk closed
 
   pushBizhawkEventQueue(BizhawkAction.PING);
-  LOGGER.info("Starting health check timeout");
+  LOGGER.info("Starting health check timeout [%s]", new Date().toISOString());
   const timeout = setTimeout(() => {
     bizhawkHealthTimeout(game, restartCycleCount, process);
     // Give longer timeout if we're in a restart, cause we gotta start the Bizhawk process too
@@ -266,15 +271,15 @@ function checkBizhawkHealth(game: GameData, restartCycleCount: number, process?:
 }
 
 export function bizhawkPong() {
-  LOGGER.info("Bizhawk pong. Health check passed");
+  LOGGER.info("Bizhawk pong. Health check passed [%s]", new Date().toISOString());
   clearTimeout(healthCheckTimeout);
 }
 
 async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, process: ChildProcess.ChildProcess) {
   restartCycleCount++;
-  LOGGER.error("Bizhawk failed health check after loading game " + game.absolutePath);
+  LOGGER.error("Bizhawk failed health check  [%s]", new Date().toISOString());
 
-  LOGGER.warn("Removing save state");
+  LOGGER.warn("Removing save state [%s]", new Date().toISOString());
   deleteStateIfExists(game);
 
   // Setup  bizhawk to restart on close, since we've removed the save state
@@ -292,6 +297,14 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
     });
   });
 
-  LOGGER.warn("Killing bizhawk process");
+  LOGGER.warn("Killing bizhawk process [%s]", new Date().toISOString());
   process.kill();
 }
+function getPotentialSpecialConfigPath(bizhawkCwd: string) {
+  const configPath = path.join(bizhawkCwd, `config.${getUserName()}.ini`);
+  if(fs.existsSync(configPath)) {
+    return "--config="+configPath;
+  }
+  return "";
+}
+

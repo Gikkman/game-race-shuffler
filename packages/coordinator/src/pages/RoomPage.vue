@@ -24,7 +24,6 @@ TipcListener.init().then(async () => {
   TipcListener.getClient().addListener("raceStateUpdate", update => {
     if (update.roomName === roomName) {
       raceState.value = update
-      console.log(update)
     }
   });
 })

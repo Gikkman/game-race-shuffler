@@ -2,15 +2,40 @@
 import { RaceStateOverview } from '@grs/shared';
 
 defineProps<{ raceState: RaceStateOverview }>();
+let calculateSwapBlockedUntil = (unixMillis: number) => {
+  if(unixMillis < Date.now()) return "-";
+  return new Date(unixMillis).toTimeString().split(" ")[0];
+}
 </script>
 
 <template>
   <div class="pane-v">
-    <div>
+    <div class="pane-h">
       Race phase: <span class="phase-text">{{ raceState.phase }}</span>
     </div>
-    <div>
+    <div class="pane-h">
       Current game: {{ raceState.currentGame?.gameName ?? "" }}
+    </div>
+    <h3>
+      Swapping Insights
+    </h3>
+    <div class="pane-h">
+      <div class="pane-v slim">
+        <div>
+          Queue Size
+        </div>
+        <div>
+          {{ raceState.swapQueueSize }}
+        </div>
+      </div>
+      <div class="pane-v slim">
+        <div>
+          Blocked Until
+        </div>
+        <div>
+          {{ calculateSwapBlockedUntil(raceState.swapBlockedUntil) }}
+        </div>
+      </div>
     </div>
     <div>
       <h3>Participants</h3>
@@ -47,6 +72,11 @@ defineProps<{ raceState: RaceStateOverview }>();
 .phase-text {
   font-weight: bold;
 }
+
+.pane-v .slim {
+  gap: 4px;
+}
+
 .leader {
   color: darkred;
   font-weight: bold;
@@ -54,10 +84,11 @@ defineProps<{ raceState: RaceStateOverview }>();
 
 table {
   width: 100%;
+
 }
 
 table > tr > * {
-  padding: 0px 10px;
+  padding: 2px 10px;
 }
 
 .game-table > tr > * {

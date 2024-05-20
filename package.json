@@ -4,10 +4,15 @@
   "private": true,
   "scripts": {
     "clean": "rimraf --glob packages/**/*.tsbuildinfo packages/**/dist packages/**/html",
+    "compile": "./compile.sh",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "dev:server": "npm run  --workspace packages/server dev",
     "dev:web": "npm run  --workspace packages/coordinator dev",
     "build": "npm run build --workspaces",
+    "build:client": "npm run build --workspace packages/client",
+    "build:web": "npm run build --workspace packages/coordinator",
+    "build:server": "npm run build --workspace packages/server",
+    "build:shared": "npm run build --workspace packages/shared -- --force",
     "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.json",
     "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.json",
     "start:server": "npm run --workspace packages/server start"

@@ -18,19 +18,29 @@ export function init(__dirname: string) {
   initialized = true;
 
   // The package-lock.json file typically only exists in the project root
-  const projectPackageLockJson = findFileUpwards("package-lock.json", __dirname);
-  if (!projectPackageLockJson) {
+  let projectPackageLockJson: string|null;
+  if(__dirname.toLowerCase().includes("bun") && __dirname.includes("root")) {
+    projectRoot = process.cwd();
+  }
+  else if ((projectPackageLockJson = findFileUpwards("package-lock.json", __dirname)) !== null) {
+    projectRoot = path.dirname(projectPackageLockJson);
+  }
+  else {
     throw new Error(`Couldn't find a npm project root. Please check your project setup.`);
   }
-  projectRoot = path.dirname(projectPackageLockJson);
   console.log("PathUtil set projectRoot to " + projectRoot);
 
   // Each workspace typically has their own package.json file
-  const workspacePackageJson = findFileUpwards("package.json", __dirname);
-  if (!workspacePackageJson) {
+  let workspacePackageJson: string|null;
+  if(__dirname.toLowerCase().includes("bun") && __dirname.includes("root")) {
+    workspaceRoot = process.cwd();
+  }
+  else if ((workspacePackageJson = findFileUpwards("package.json", __dirname)) !== null) {
+    workspaceRoot = path.dirname(workspacePackageJson);
+  }
+  else {
     throw new Error(`Couldn't find a npm workspace root. Please check your project setup.`);
   }
-  workspaceRoot = path.dirname(workspacePackageJson);
   console.log("PathUtil set workspaceRoot to " + workspaceRoot);
 }
 

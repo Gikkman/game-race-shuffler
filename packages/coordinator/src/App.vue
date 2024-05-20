@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 16px;
+  gap: 8px;
 }
 
 .pane-h {
@@ -24,5 +24,10 @@
 
 input {
   height: 25px;
+}
+
+h3 {
+  margin-block-start: 1em;
+  margin-block-end: 0.3em;
 }
 </style>
