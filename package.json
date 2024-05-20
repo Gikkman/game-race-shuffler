@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "clean": "rimraf --glob packages/**/*.tsbuildinfo packages/**/dist packages/**/html",
-    "compile:dev": "./compile.sh",
-    "compile:prod": "./compile.sh --minify --sourcemap",
+    "compile": "./compile.sh",
     "lint": "eslint -c .eslint.cjs --fix packages/**/*.ts",
     "dev:server": "npm run  --workspace packages/server dev",
     "dev:web": "npm run  --workspace packages/coordinator dev",
