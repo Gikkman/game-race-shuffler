@@ -1,11 +1,11 @@
-import { RaceParticipant, RaceStateUpdate } from "./Types.js";
+import { RaceParticipant, RaceStateOverview, RaceStateUpdate } from "./Types.js";
 
 export interface WebsocketContract {
   loadGame: {gameLogicalName: string, roomName: string},
   raceStateUpdate: RaceStateUpdate & {roomName: string},
   raceEnded: {participants: RaceParticipant[], roomName: string}
   completeGame: (data: CompleteGameRequest) => boolean,
-  joinRace: (data: JoinRaceRequest) => ({userKey: string}|undefined),
+  joinRace: (data: JoinRaceRequest) => ({userKey: string, raceState: RaceStateOverview}),
 }
 
 type JoinRaceRequest = {

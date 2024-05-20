@@ -91,7 +91,8 @@ export async function joinRace() {
   const userName = ClientConfigService.getUserName();
   const roomName = ClientConfigService.getRoomName();
   const roomKey = ClientConfigService.getRoomKey();
-  room = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName});
+  const joinData = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName});
+  room = {userKey: joinData.userKey};
 }
 
 export function bindGet(url: string, callback: express.RequestHandler) {

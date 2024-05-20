@@ -16,9 +16,9 @@ export async function init() {
   });
 
   Server.bindGet("/api/room/:name", (req, res) => {
-    const room = RoomManager.getRoomOverview(req.params['name']);
+    const room = RoomManager.roomExists(req.params['name']??"UNKNOWN");
     if(!room) {
-      return res.status(404).send("No such room found");
+      return res.status(404).send("Room not found");
     }
     return res.json(room);
   });
@@ -77,7 +77,8 @@ export async function init() {
       throw new Error("User name already in use");
     }
     const userKey = RoomManager.joinRace(room, userName);
-    return userKey;
+    const raceState = RoomManager.getRoomOverview(room).raceState;
+    return {...userKey, raceState};
   });
 
   Server.tipc().addHandler("completeGame", (data) => {

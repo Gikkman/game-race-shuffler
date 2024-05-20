@@ -53,11 +53,7 @@ export function listRooms() {
   return roomList.map(e => e.roomName);
 }
 
-export function getRoomOverview(roomName: string|undefined): RoomOverview|undefined {
-  const room = rooms.get(roomName ?? "");
-  if(!room) {
-    return;
-  }
+export function getRoomOverview(room: RoomState): RoomOverview {
   const raceState = room.raceState.getStateSummary();
   return {
     roomName: room.roomName,
