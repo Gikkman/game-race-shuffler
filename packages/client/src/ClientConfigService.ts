@@ -11,6 +11,7 @@ type ClientConfig = {
   bizhawk: string;
   roomKey: string;
   roomName: string;
+  serverUrl: string;
 }
 
 let initialized = false;
@@ -20,6 +21,7 @@ let bizhawkLocation: string;
 let userName: string;
 let roomKey: string;
 let roomName: string;
+let serverUrl: URL;
 
 export * as ClientConfigService from "./ClientConfigService.js";
 
@@ -43,16 +45,24 @@ export function init() {
   roomKey = clientConfig.roomKey;
   roomName = clientConfig.roomName;
 
-  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir, clientConfigPath);
+  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir ?? "./states", clientConfigPath);
   PathUtils.ensureDir(saveStateLocation);
 
-  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir, clientConfigPath);
-  PathUtils.ensureDir(gameLocation);
+  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir ?? "./games", clientConfigPath);
+  if (!(PathUtils.existsSync(gameLocation))) {
+    throw new Error("Invalid games path. Cannot find a folder at " + gameLocation);
+  }
 
   bizhawkLocation = PathUtils.toAbsolutePath(clientConfig.bizhawk, clientConfigPath);
   if (!(PathUtils.existsSync(bizhawkLocation) && bizhawkLocation.endsWith("EmuHawk.exe"))) {
     throw new Error("Invalid Bizhawk path. Cannot find EmuHwak.exe at location " + bizhawkLocation);
   }
+
+  const url = clientConfig.serverUrl ?? "https://grs.gikkman.com";
+  if(!URL.canParse(url)) {
+    throw new Error("Invalid Server URL. Cannot parse " + url);
+  }
+  serverUrl = new URL(url);
 
   initialized = true;
 }
@@ -86,6 +96,11 @@ export function getRoomName(): string {
   ensureInitialized();
   return roomName;
 }
+
+export function getServerURL(): URL {
+  ensureInitialized();
+  return serverUrl;
+}
 /************************************************************************
 *  Internal Functions
 ************************************************************************/
@@ -95,19 +110,10 @@ function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
     return false;
   }
 
-  const { userName, gameDir, saveDir, bizhawk, roomKey, roomName } = obj as Partial<ClientConfig>;
+  const { userName, roomKey, roomName } = obj as Partial<ClientConfig>;
 
   if (!(typeof userName === 'string' && userName.length > 0)) {
     throw new Error("Client config error! Missing property 'userName'");
-  }
-  if (!(typeof gameDir === 'string' && gameDir.length > 0)) {
-    throw new Error("Client config error. Missing property 'gameDir'");
-  }
-  if (!(typeof saveDir === 'string' && saveDir.length > 0)) {
-    throw new Error("Client config error. Missing property 'saveDir'");
-  }
-  if (!(typeof bizhawk === 'string' && bizhawk.length > 0)) {
-    throw new Error("Client config error. Missing property 'bizhawk'");
   }
   if (!(typeof roomKey === 'string' && roomKey.length > 0)) {
     throw new Error("Client config error. Missing property 'roomKey'");

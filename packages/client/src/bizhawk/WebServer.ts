@@ -28,11 +28,12 @@ export async function init(): Promise<void> {
   if (initialized) {
     return;
   }
-  const connectKey = ClientConfigService.getRoomKey();
+  const serverUrl = ClientConfigService.getServerURL();
   const tipcConnectionManager = TipcNodeClient.create({
-    host: "127.0.0.1",
-    port: 47911,
-    path: "/ws?key="+connectKey,
+    host: serverUrl.host,
+    port: parseInt(serverUrl.port ?? 433),
+    path: "/ws",
+    protocol: serverUrl.protocol.startsWith("https") ? "wss" : "ws",
     loggerOptions: {
       debug: TIPC_LOGGER.debug,
       info: TIPC_LOGGER.info,

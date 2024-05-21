@@ -12,7 +12,7 @@ const app = express();
  ************************************************************************/
 let initialized = false;
 
-const port = 47911;
+const port = 8090;
 let server: Server;
 
 let tipcServer: TipcServer;

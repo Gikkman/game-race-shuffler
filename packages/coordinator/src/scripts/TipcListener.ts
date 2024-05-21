@@ -15,11 +15,12 @@ export async function init() {
   }
   initialized = true;
 
-  const host = location.host.split(":")[0];
+  const [host, port] = location.host.split(":");
   const tipc = TipcBrowserClient.create({
     host: host,
-    port: 47911,
-    path: "/ws?key=KEY-HERE",
+    port: parseInt(port ?? "443"),
+    path: "/ws",
+    protocol: host.startsWith("https") ? "wss" : "ws",
     onDisconnect: async () => {
       connected.value = false;
       console.error("Websocket disconnected. Reconnecting");
