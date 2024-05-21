@@ -20,7 +20,7 @@ export async function init() {
     host: host,
     port: parseInt(port ?? "443"),
     path: "/ws",
-    protocol: host.startsWith("https") ? "wss" : "ws",
+    protocol: location.protocol.startsWith("https") ? "wss" : "ws",
     onDisconnect: async () => {
       connected.value = false;
       console.error("Websocket disconnected. Reconnecting");
