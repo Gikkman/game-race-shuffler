@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 
-import { getBizhawkLocation, getSaveStateLocation, getUserName } from '../ClientConfigService.js';
+import { getBizhawkLocation, getBizhawkConfig, getSaveStateLocation } from '../ClientConfigService.js';
 
 /************************************************************************
  *  Types
@@ -184,7 +184,7 @@ function internalLaunchBizhawk() {
     const luaPath = getLuaPath();
     const params = ["--lua=" + luaPath, `--url_get=${bizhawkCallPort}`];
 
-    const specialConfigPath = getPotentialSpecialConfigPath(bizhawkCwd);
+    const specialConfigPath = getPotentialSpecialConfigPath();
     if(specialConfigPath) {
       params.push(specialConfigPath);
     }
@@ -300,9 +300,9 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   LOGGER.warn("Killing bizhawk process [%s]", new Date().toISOString());
   process.kill();
 }
-function getPotentialSpecialConfigPath(bizhawkCwd: string) {
-  const configPath = path.join(bizhawkCwd, `config.${getUserName()}.ini`);
-  if(fs.existsSync(configPath)) {
+function getPotentialSpecialConfigPath() {
+  const configPath = getBizhawkConfig();
+  if(configPath && fs.existsSync(configPath)) {
     return "--config="+configPath;
   }
   return "";

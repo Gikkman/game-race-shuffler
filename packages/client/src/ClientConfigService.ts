@@ -1,27 +1,36 @@
 import fs from "node:fs";
+import { parse } from "ini";
 
 import { PathUtils } from "@grs/shared";
 
 import * as CommandLineService from './CommandLineService.js';
 
 type ClientConfig = {
-  userName: string;
-  gameDir: string;
-  saveDir: string;
-  bizhawk: string;
-  roomKey: string;
-  roomName: string;
-  serverUrl: string;
+  Room: {
+    RoomName: string,
+    RoomKey: string,
+    UserName: string,
+  },
+  Paths?: {
+    BizhawkProgram?: string,
+    BizhawkConfig?: string,
+    SaveStates?: string,
+    Games?: string,
+  },
+  Server?: {
+    Host?: string,
+  },
 }
 
 let initialized = false;
 let saveStateLocation: string;
 let gameLocation: string;
 let bizhawkLocation: string;
+let bizhawkConfig: string|undefined;
 let userName: string;
 let roomKey: string;
 let roomName: string;
-let serverUrl: URL;
+let serverHost: string;
 
 export * as ClientConfigService from "./ClientConfigService.js";
 
@@ -36,33 +45,30 @@ export function init() {
   }
 
   const clientConfigContent = fs.readFileSync(clientConfigPath, "utf-8");
-  const clientConfig = JSON.parse(clientConfigContent);
+  const clientConfig = parse(clientConfigContent);
   if (!typeGuardClientConfig(clientConfig)) {
-    process.exit(1);
+    throw new Error("Config validation error");
   }
 
-  userName = clientConfig.userName;
-  roomKey = clientConfig.roomKey;
-  roomName = clientConfig.roomName;
+  serverHost = clientConfig?.Server?.Host ?? "grs.gikkman.com";
 
-  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.saveDir ?? "./states", clientConfigPath);
+  userName = clientConfig.Room?.UserName;
+  roomKey = clientConfig.Room?.RoomKey;
+  roomName = clientConfig.Room?.RoomName;
+
+  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.SaveStates ?? "./states", clientConfigPath);
   PathUtils.ensureDir(saveStateLocation);
 
-  gameLocation = PathUtils.toAbsolutePath(clientConfig.gameDir ?? "./games", clientConfigPath);
+  gameLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.Games ?? "./games", clientConfigPath);
   if (!(PathUtils.existsSync(gameLocation))) {
     throw new Error("Invalid games path. Cannot find a folder at " + gameLocation);
   }
 
-  bizhawkLocation = PathUtils.toAbsolutePath(clientConfig.bizhawk, clientConfigPath);
+  bizhawkLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.BizhawkProgram ?? "../EmuHawk.exe", clientConfigPath);
   if (!(PathUtils.existsSync(bizhawkLocation) && bizhawkLocation.endsWith("EmuHawk.exe"))) {
     throw new Error("Invalid Bizhawk path. Cannot find EmuHwak.exe at location " + bizhawkLocation);
   }
-
-  const url = clientConfig.serverUrl ?? "https://grs.gikkman.com";
-  if(!URL.canParse(url)) {
-    throw new Error("Invalid Server URL. Cannot parse " + url);
-  }
-  serverUrl = new URL(url);
+  bizhawkConfig = clientConfig.Paths?.BizhawkConfig;
 
   initialized = true;
 }
@@ -70,6 +76,11 @@ export function init() {
 export function getBizhawkLocation(): string {
   ensureInitialized();
   return bizhawkLocation;
+}
+
+export function getBizhawkConfig(): string|undefined {
+  ensureInitialized();
+  return bizhawkConfig;
 }
 
 export function getGameLocation(): string {
@@ -97,9 +108,9 @@ export function getRoomName(): string {
   return roomName;
 }
 
-export function getServerURL(): URL {
+export function getServerHost(): string {
   ensureInitialized();
-  return serverUrl;
+  return serverHost;
 }
 /************************************************************************
 *  Internal Functions
@@ -107,19 +118,23 @@ export function getServerURL(): URL {
 
 function typeGuardClientConfig(obj: unknown): obj is ClientConfig {
   if (typeof obj !== 'object' || obj === null) {
-    return false;
+    throw new Error("Config file could not be parsed");
   }
 
-  const { userName, roomKey, roomName } = obj as Partial<ClientConfig>;
+  const config = obj as Partial<ClientConfig>;
+  if(typeof config.Room !== "object") {
+    throw new Error("Config file must have a [Room] header");
+  }
+  const { UserName, RoomKey, RoomName } = config.Room;
 
-  if (!(typeof userName === 'string' && userName.length > 0)) {
-    throw new Error("Client config error! Missing property 'userName'");
+  if (!(typeof UserName === 'string' && UserName.length > 0)) {
+    throw new Error("Client config error! Missing property 'UserName'");
   }
-  if (!(typeof roomKey === 'string' && roomKey.length > 0)) {
-    throw new Error("Client config error. Missing property 'roomKey'");
+  if (!(typeof RoomKey === 'string' && RoomKey.length > 0)) {
+    throw new Error("Client config error. Missing property 'RoomKey'");
   }
-  if (!(typeof roomName === 'string' && roomName.length > 0)) {
-    throw new Error("Client config error. Missing property 'roomName'");
+  if (!(typeof RoomName === 'string' && RoomName.length > 0)) {
+    throw new Error("Client config error. Missing property 'RoomName'");
   }
   return true;
 }

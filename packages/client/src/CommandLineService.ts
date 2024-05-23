@@ -8,9 +8,9 @@ export function init() {
   }
   program
     .name("Game Race Shuffler Client")
-    .addOption(new Option('-c, --config <location>', 'Where to find the client-config.json file')
+    .addOption(new Option('-c, --config <location>', 'Where to find the client-config.ini file')
       .env("GRS_CLIENT_CONFIG")
-      .default("client-config.json"))
+      .default("client-config.ini"))
     .parse();
 
   initialized = true;

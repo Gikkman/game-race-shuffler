@@ -8,7 +8,7 @@
       "cwd": "${workspaceFolder}/packages/client",
       "args": [
         "dist/index.js",
-        "--config=client-config-A.json"
+        "--config=client-config-A.ini"
       ],
       "env": {
         "LOGLEVEL": "debug"
@@ -23,7 +23,7 @@
       "cwd": "${workspaceFolder}/packages/client",
       "args": [
         "dist/index.js",
-        "--config=client-config-B.json"
+        "--config=client-config-B.ini"
       ],
       "env": {
         "LOGLEVEL": "debug"

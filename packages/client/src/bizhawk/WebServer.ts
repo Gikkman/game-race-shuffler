@@ -28,12 +28,15 @@ export async function init(): Promise<void> {
   if (initialized) {
     return;
   }
-  const serverUrl = ClientConfigService.getServerURL();
+  const [host, port] = ClientConfigService.getServerHost().split(":");
+  const serverHost = host ?? "grs.gikkman.com";
+  const serverPort = parseInt(port || "443");
+  const serverProtocol = (serverHost.startsWith("localhost") || serverHost.startsWith("10.") || serverHost.startsWith("172.") || serverHost.startsWith("192.168.")) ? "ws" : "wss";
   const tipcConnectionManager = TipcNodeClient.create({
-    host: serverUrl.host,
-    port: parseInt(serverUrl.port ?? 433),
+    host: serverHost,
+    port: serverPort,
     path: "/ws",
-    protocol: serverUrl.protocol.startsWith("https") ? "wss" : "ws",
+    protocol: serverProtocol,
     loggerOptions: {
       debug: TIPC_LOGGER.debug,
       info: TIPC_LOGGER.info,
@@ -58,8 +61,9 @@ export async function init(): Promise<void> {
     }
   });
 
-  const tipcClient = await tipcConnectionManager.connect().catch(() => {
-    console.error("Could not connect TIPC to remote server. Is server alive?");
+  const tipcClient = await tipcConnectionManager.connect().catch((e) => {
+    console.error(e);
+    console.error("Could not connect TIPC to remote server %s. Is server alive?", tipcClient.getAddressInfo());
     process.exit(1);
   });
   tipcNsClient = tipcClient.forContractAndNamespace<WebsocketContract>("ns");

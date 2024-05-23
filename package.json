@@ -13,8 +13,8 @@
     "build:web": "npm run build --workspace packages/coordinator",
     "build:server": "npm run build --workspace packages/server",
     "build:shared": "npm run build --workspace packages/shared -- --force",
-    "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.json",
-    "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.json",
+    "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.ini",
+    "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.ini",
     "start:server": "npm run --workspace packages/server start"
   },
   "keywords": [],
