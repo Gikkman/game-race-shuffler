@@ -232,7 +232,7 @@ function internalLaunchBizhawk() {
 }
 
 function getLuaPath() {
-  return PathUtils.pathRelativeToWorkspaceRoot("lua", "bizhawk-client.lua");
+  return PathUtils.pathRelativeToWorkspaceRoot("bizhawk-client.lua");
 }
 
 function cleanupBizhawk() {
