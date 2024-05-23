@@ -11,7 +11,6 @@ cp ./client-config.ini ./dist/client-config.ini
 cat > ./dist/RUN.bat <<EOF
 @echo off
 
-set LOG_LEVEL=DEBUG
 start /WAIT /B ./grs-win.exe
 
 echo Press enter to exit...

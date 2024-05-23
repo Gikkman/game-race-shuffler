@@ -47,7 +47,7 @@ function swapGame() {
       <h3>Admin Key</h3>
     </div>
     <div class="pane-h">
-        <input name="adminKey" :disabled="adminKeyFieldDisabled" v-model="adminKey" type="password" placeholder="Admin Key">
+        <input name="adminKey" :disabled="adminKeyFieldDisabled" v-model="adminKey" autocomplete="off" type="password" placeholder="Admin Key">
         <button :disabled="!adminKey" @click="copyAdminKey">COPY</button>
     </div>
   </div>

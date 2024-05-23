@@ -45,11 +45,11 @@ function removeGame(name: string) {
   <div class="pane-v">
     <h2>Create Room</h2>
     <div class="pane-h">
-      <input name="room-name" v-model="roomName" placeholder="Room name" />
-      <input name="room-key" v-model="roomKey" type="password" placeholder="Room password" />
+      <input name="room-name" v-model="roomName" autocomplete="off" placeholder="Room name" />
+      <input name="room-key" v-model="roomKey" type="password" autocomplete="off" placeholder="Room password" />
     </div>
     <div class="pane-h">
-      <input class="game-input" name="new-game" v-model="newGame" placeholder="Game name" />
+      <input class="game-input" name="new-game" v-model="newGame" autocomplete="off" placeholder="Game name" />
       <button @click="addGame">Add</button>
     </div>
     <table class="games">
