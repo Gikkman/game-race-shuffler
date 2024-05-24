@@ -81,6 +81,21 @@ export async function init() {
     return {...userKey, raceState};
   });
 
+  Server.tipc().addHandler("rejoinRace", (data) => {
+    const {roomName, userName, userKey} = data;
+    LOGGER.info(`Request to join race: ${roomName}`);
+    const room = RoomManager.roomExists(roomName);
+    if(!room) {
+      throw new Error("Room not found");
+    }
+    if(!RoomManager.hasUserAccess(room, userName, userKey)) {
+      throw new Error("Invalid user key");
+    }
+    // Rejoin action?
+    const raceState = RoomManager.getRoomOverview(room).raceState;
+    return {raceState};
+  });
+
   Server.tipc().addHandler("completeGame", (data) => {
     const {roomName, userName, userKey, gameLogicalName} = data;
     const room = RoomManager.roomExists(roomName);

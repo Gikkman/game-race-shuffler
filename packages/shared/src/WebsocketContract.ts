@@ -6,12 +6,19 @@ export interface WebsocketContract {
   raceEnded: {participants: RaceParticipant[], roomName: string}
   completeGame: (data: CompleteGameRequest) => boolean,
   joinRace: (data: JoinRaceRequest) => ({userKey: string, raceState: RaceStateOverview}),
+  rejoinRace: (data: ReJoinRaceRequest) => ({raceState: RaceStateOverview}),
 }
 
 type JoinRaceRequest = {
   roomName: string,
   roomKey: string,
   userName: string,
+}
+
+type ReJoinRaceRequest = {
+  roomName: string,
+  userName: string,
+  userKey: string,
 }
 
 type CompleteGameRequest = {

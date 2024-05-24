@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { parse } from "ini";
 
 import { PathUtils } from "@grs/shared";
@@ -25,6 +26,7 @@ type ClientConfig = {
 let initialized = false;
 let saveStateLocation: string;
 let gameLocation: string;
+let roomDataFileLocation: string;
 let bizhawkLocation: string;
 let bizhawkConfig: string|undefined;
 let userName: string;
@@ -56,8 +58,11 @@ export function init() {
   roomKey = clientConfig.Room?.RoomKey;
   roomName = clientConfig.Room?.RoomName;
 
-  saveStateLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.SaveStates ?? "./states", clientConfigPath);
+  const saveStateRoot = PathUtils.toAbsolutePath(clientConfig.Paths?.SaveStates ?? "./states", clientConfigPath);
+  saveStateLocation = path.join(saveStateRoot, roomName);
   PathUtils.ensureDir(saveStateLocation);
+
+  roomDataFileLocation = path.join(saveStateRoot, `${roomName}.json`);
 
   gameLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.Games ?? "./games", clientConfigPath);
   if (!(PathUtils.existsSync(gameLocation))) {
@@ -111,6 +116,11 @@ export function getRoomName(): string {
 export function getServerHost(): string {
   ensureInitialized();
   return serverHost;
+}
+
+export function getRoomDataFileLocation(): string {
+  ensureInitialized();
+  return roomDataFileLocation;
 }
 /************************************************************************
 *  Internal Functions

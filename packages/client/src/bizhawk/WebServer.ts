@@ -15,7 +15,6 @@ let initialized = false;
 const LOGGER = Logger.getLogger("Server");
 const app = express();
 let server: Server;
-let room: {userKey: string};
 
 const TIPC_LOGGER = Logger.getLogger();
 let tipcNsClient: TipcNamespaceClient<WebsocketContract>;
@@ -96,17 +95,6 @@ export async function init(): Promise<void> {
   initialized = true;
 }
 
-export async function joinRace() {
-  const userName = ClientConfigService.getUserName();
-  const roomName = ClientConfigService.getRoomName();
-  const roomKey = ClientConfigService.getRoomKey();
-  const joinData = await tipcNsClient.invoke("joinRace", {roomKey, roomName, userName}).catch(e => {
-    LOGGER.error(e);
-    process.exit(1);
-  });
-  room = {userKey: joinData.userKey};
-}
-
 export function bindGet(url: string, callback: express.RequestHandler) {
   ensureInitialized();
   app.get(url, (req, res, next) => {
@@ -129,11 +117,6 @@ export function tipc() {
 export function getAddress() {
   ensureInitialized();
   return server.address() as AddressInfo;
-}
-
-export function getUserKey() {
-  ensureInitialized();
-  return room.userKey;
 }
 
 /************************************************************************
