@@ -5,14 +5,15 @@ import fs from 'node:fs';
 
 import { Logger, FunctionUtils, PathUtils } from '@grs/shared';
 
-import { getBizhawkLocation, getBizhawkConfig, getSaveStateLocation } from '../ClientConfigService.js';
+import { getBizhawkLocation, getBizhawkConfig } from '../ClientConfigService.js';
+import { deleteLatestSaveState, getLatestSaveStatePath, getNextSaveStatePath } from './SaveStateService.js';
 
 /************************************************************************
  *  Types
  ************************************************************************/
 type BizhawkEvent = {
   action: string,
-  path: string
+  path?: string,
 }
 
 enum BizhawkAction {
@@ -30,15 +31,13 @@ enum BizhawkAction {
  ************************************************************************/
 const LOGGER = Logger.getLogger("BizhawkService");
 const BIZ_LOGGER = Logger.getLogger("Bizhawk.exe");
-const BLANK_GAME: GameData = {gameName: "No Game", absolutePath: ""};
+const BLANK_GAME: GameData = {gameName: "No Game", absolutePath: "", fileName: "", logicalName: "nogame"};
 const QUEUE: BizhawkEvent[] = [];
 
 let bizhawkProc: ChildProcess.ChildProcess | undefined;
 let healthCheckTimeout: NodeJS.Timeout | undefined;
 
 let bizhawkCallPort: number;
-
-const saveStateExtension = ".State";
 /************************************************************************
  *  Export
  ************************************************************************/
@@ -70,7 +69,7 @@ export function loadGame(game: GameData) {
 
 export async function saveAndQuit() {
   LOGGER.info("Save and Quit requested");
-  saveStateIfRunning(currentGame);
+  await saveStateIfRunning(currentGame);
   await FunctionUtils.sleep(500);
   pushBizhawkEventQueue(BizhawkAction.QUIT);
 }
@@ -113,11 +112,9 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
   }
   muteBizhawk();
   await FunctionUtils.sleep(50); // Just over 3 frames
-  saveStateIfRunning(currentGame);
-  //await FunctionUtils.sleep(30);
+  await saveStateIfRunning(currentGame);
   pushBizhawkEventQueue(BizhawkAction.GAME, newGame.absolutePath);
-  //await FunctionUtils.sleep(30);
-  loadStateIfExists(newGame);
+  await loadStateIfExists(newGame);
   await FunctionUtils.sleep(50);
   unmuteBizhawk();
 
@@ -125,9 +122,9 @@ async function internalLoadGame(newGame: GameData, restartCycleCount = 0) {
   checkBizhawkHealth(newGame, restartCycleCount, bizhawkProc);
 }
 
-function saveStateIfRunning(file: GameData) {
-  if (file !== BLANK_GAME) {
-    const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
+async function saveStateIfRunning(game: GameData) {
+  if (game !== BLANK_GAME) {
+    const stateLocation = await getNextSaveStatePath(game);
     pushBizhawkEventQueue(BizhawkAction.SAVE, stateLocation);
   }
   else {
@@ -135,9 +132,9 @@ function saveStateIfRunning(file: GameData) {
   }
 }
 
-function loadStateIfExists(file: GameData) {
-  const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
-  if (fs.existsSync(stateLocation)) {
+async function loadStateIfExists(game: GameData) {
+  const stateLocation = await getLatestSaveStatePath(game);
+  if (stateLocation !== undefined) {
     pushBizhawkEventQueue(BizhawkAction.LOAD, stateLocation);
   }
   else {
@@ -145,22 +142,11 @@ function loadStateIfExists(file: GameData) {
   }
 }
 
-function deleteStateIfExists(file: GameData) {
-  const stateLocation = path.join(getSaveStateLocation(), file.gameName) + saveStateExtension;
-  if (fs.existsSync(stateLocation)) {
-    // TODO: Move previous save state instead of just deleting
-    fs.unlinkSync(stateLocation);
-    LOGGER.debug("Deleted save state from " + stateLocation);
-  }
-  else {
-    LOGGER.debug("No save state to delete at " + stateLocation);
-  }
-}
-
-function pushBizhawkEventQueue(action: BizhawkAction, path: string = "") {
+function pushBizhawkEventQueue(action: BizhawkAction, path?: string, callback?: () => void) {
   const event = {
-    action: action,
-    path: path
+    action,
+    path,
+    callback
   };
   QUEUE.push(event);
 }
@@ -201,7 +187,7 @@ function internalLaunchBizhawk() {
 
     proc.on('close', (code, signal) => {
       BIZ_LOGGER.debug(`[%s] Bizhawk closed with code: %d signal: %s`, launchTime, code, signal);
-      // bizhawkLog(launchTime, `Bizhawk closed with ${Number.isInteger(code) ? 'code: ' + code : 'signal: ' + signal}`);
+      process.emit("SIGINT");
     });
 
     proc.on('exit', (code, signal) => {
@@ -279,20 +265,20 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   restartCycleCount++;
   LOGGER.error("Bizhawk failed health check  [%s]", new Date().toISOString());
 
-  LOGGER.warn("Removing save state [%s]", new Date().toISOString());
-  deleteStateIfExists(game);
+  LOGGER.warn("Decrementing save state counter [%s]", new Date().toISOString());
+  deleteLatestSaveState(game);
 
   // Setup  bizhawk to restart on close, since we've removed the save state
   // Use setImmediate to not spawn a new bizhawk inside the callback
   process.on('close', () => {
     setImmediate(() => {
       if (restartCycleCount > 3) {
-        LOGGER.error("Aborting restart cycle. Permanently failed to start Bizhawk for game: " + game.absolutePath);
+        LOGGER.error(`Aborting restart cycle. Permanently failed to start Bizhawk for game ${game.gameName} (${game.fileName})`);
         return;
       }
       LOGGER.info("Relaunching bizhawk. Attempt: " + restartCycleCount);
       internalLaunchBizhawk();
-      LOGGER.info("Reloading game " + game.gameName);
+      LOGGER.info(`Reloading game ${game.gameName} (${game.fileName})`);
       internalLoadGame(game, restartCycleCount);
     });
   });
@@ -300,6 +286,7 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   LOGGER.warn("Killing bizhawk process [%s]", new Date().toISOString());
   process.kill();
 }
+
 function getPotentialSpecialConfigPath() {
   const configPath = getBizhawkConfig();
   if(configPath && fs.existsSync(configPath)) {

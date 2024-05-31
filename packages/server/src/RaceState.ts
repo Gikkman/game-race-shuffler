@@ -1,4 +1,4 @@
-import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview } from "@grs/shared";
+import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview, FunctionUtils } from "@grs/shared";
 
 const MIN_SWAP_DELAY_MILLIS = 5000;
 
@@ -39,7 +39,7 @@ export default class RaceState {
       if (args.games.length < 1) {
         throw new Error("Cannot create race state. Number of games must be at least 1");
       }
-      this.games = args.games.map(e => ({ gameName: e }));
+      this.games = args.games.map(e => ({ gameName: e, logicalName: FunctionUtils.calculateLogicalName(e) }));
     }
     this.onStateUpdate = onStateUpdate;
   }

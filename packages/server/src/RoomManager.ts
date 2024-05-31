@@ -62,11 +62,19 @@ export function getRoomOverview(room: RoomState): RoomOverview {
   };
 }
 
-export function joinRace(room: RoomState, userName: string): {userKey: string} {
+export function joinRace(room: RoomState, userName: string): string {
   room.raceState.addParticipant(userName);
   const userKey = generateUserKey(userName);
   room.userKeys[userName] = userKey;
-  return {userKey};
+  return userKey;
+}
+
+export function rejoinRace(room: RoomState, userName: string): string {
+  const userKey = room.userKeys[userName];
+  if(!userKey) {
+    throw new Error("Cannot rejoin room " + room.roomName + ". No user key exists for userName " + userName);
+  }
+  return userKey;
 }
 
 export function completeGame(room: RoomState, userName: string, gameName: string) {

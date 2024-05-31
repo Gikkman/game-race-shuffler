@@ -20,19 +20,14 @@ export function init() {
   fs.readdirSync(gameLocation, {withFileTypes: true})
     .filter(e => e.isFile())
     .map(e => calculateAbsolutePath(e, gameLocation))
-    .map(fileToName)
-    .map(calculateLogicalName)
-    .forEach(e => nameFileMap.set(e.logicalName, e.game));
+    .map(absolutePathToGameData)
+    .forEach(e => nameFileMap.set(e.logicalName, e));
   initialized = true;
 }
 
 export function getGameForLogicalName(logicalName: string) {
   ensureInitialized();
   return nameFileMap.get(logicalName);
-}
-
-export function getLogicalNameForGame(game: GameData) {
-  return calculateLogicalName(game).logicalName;
 }
 
 /************************************************************************
@@ -43,7 +38,7 @@ function calculateAbsolutePath(file: fs.Dirent, gameLocation: string) {
   return PathUtils.toAbsolutePath(file.name, gameLocation);
 }
 
-function fileToName(absolutePath: string): GameData {
+function absolutePathToGameData(absolutePath: string): GameData {
   const fileName = path.basename(absolutePath);
   let firstParanthesis = Number.MAX_SAFE_INTEGER;
   let firstBracket = Number.MAX_SAFE_INTEGER;
@@ -61,12 +56,7 @@ function fileToName(absolutePath: string): GameData {
     }
   }
   const gameName = fileName.substring(0, Math.min(firstParanthesis, firstBracket, lastDot) ).trim();
-  return {absolutePath, gameName};
-}
-
-function calculateLogicalName(game: GameData): {logicalName: string, game: GameData}{
-  const logicalName = FunctionUtils.calculateLogicalName(game.gameName);
-  return {logicalName, game};
+  return {absolutePath, gameName, fileName, logicalName: FunctionUtils.calculateLogicalName(gameName)};
 }
 
 function ensureInitialized() {

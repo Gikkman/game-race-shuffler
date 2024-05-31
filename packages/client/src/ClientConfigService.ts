@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import path from "node:path";
 import { parse } from "ini";
 
 import { PathUtils } from "@grs/shared";
@@ -23,16 +22,19 @@ type ClientConfig = {
   },
 }
 
+type RoomConfig = {
+  roomName: string,
+  roomKey: string,
+  userName: string,
+}
+
 let initialized = false;
-let saveStateLocation: string;
+let stateLocation: string;
 let gameLocation: string;
-let roomDataFileLocation: string;
 let bizhawkLocation: string;
 let bizhawkConfig: string|undefined;
-let userName: string;
-let roomKey: string;
-let roomName: string;
 let serverHost: string;
+let roomConfig: RoomConfig;
 
 export * as ClientConfigService from "./ClientConfigService.js";
 
@@ -54,15 +56,14 @@ export function init() {
 
   serverHost = clientConfig?.Server?.Host ?? "grs.gikkman.com";
 
-  userName = clientConfig.Room?.UserName;
-  roomKey = clientConfig.Room?.RoomKey;
-  roomName = clientConfig.Room?.RoomName;
+  roomConfig = {
+    userName: clientConfig.Room.UserName,
+    roomKey: clientConfig.Room.RoomKey,
+    roomName: clientConfig.Room.RoomName,
+  };
 
-  const saveStateRoot = PathUtils.toAbsolutePath(clientConfig.Paths?.SaveStates ?? "./states", clientConfigPath);
-  saveStateLocation = path.join(saveStateRoot, roomName);
-  PathUtils.ensureDir(saveStateLocation);
-
-  roomDataFileLocation = path.join(saveStateRoot, `${roomName}.json`);
+  stateLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.SaveStates ?? "./states", clientConfigPath);
+  PathUtils.ensureDir(stateLocation);
 
   gameLocation = PathUtils.toAbsolutePath(clientConfig.Paths?.Games ?? "./games", clientConfigPath);
   if (!(PathUtils.existsSync(gameLocation))) {
@@ -93,24 +94,14 @@ export function getGameLocation(): string {
   return gameLocation;
 }
 
-export function getSaveStateLocation(): string {
+export function getStateLocation(): string {
   ensureInitialized();
-  return saveStateLocation;
+  return stateLocation;
 }
 
-export function getUserName(): string {
+export function getRoomConfig(): RoomConfig {
   ensureInitialized();
-  return userName;
-}
-
-export function getRoomKey(): string {
-  ensureInitialized();
-  return roomKey;
-}
-
-export function getRoomName(): string {
-  ensureInitialized();
-  return roomName;
+  return roomConfig;
 }
 
 export function getServerHost(): string {
@@ -118,10 +109,6 @@ export function getServerHost(): string {
   return serverHost;
 }
 
-export function getRoomDataFileLocation(): string {
-  ensureInitialized();
-  return roomDataFileLocation;
-}
 /************************************************************************
 *  Internal Functions
 ************************************************************************/

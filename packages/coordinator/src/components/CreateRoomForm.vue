@@ -5,13 +5,14 @@ import { storeAdminKey } from '../scripts/KeyValueStore';
 import { CreateRoomRequest } from '@grs/shared';
 import { router } from '../scripts/Router';
 
-const roomName = ref("ESA2024");
-const roomKey = ref("KEY-HERE");
+const roomName = ref("TEST");
+const roomKey = ref("TEST");
 const games = ref(new Set<string>([
-  "Super Mario Bros",
-  "StarTropics",
-  "Chip n Dale - Rescue Rangers",
-  "Snake Rattle n Roll"
+  "Super Mario Bros.",
+  "Batman - The Video Game",
+  "Tetris",
+  "Contra",
+  "DuckTales"
 ]))
 
 const newGame = ref("")
@@ -45,7 +46,7 @@ function removeGame(name: string) {
   <div class="pane-v">
     <h2>Create Room</h2>
     <div class="pane-h">
-      <input name="room-name" v-model="roomName" autocomplete="off" placeholder="Room name" />
+      <input name="room-name" v-model="roomName" autocomplete="off" placeholder="Room name"/>
       <input name="room-key" v-model="roomKey" type="password" autocomplete="off" placeholder="Room password" />
     </div>
     <div class="pane-h">

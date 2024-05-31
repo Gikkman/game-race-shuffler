@@ -78,12 +78,12 @@ export async function init() {
     }
     const userKey = RoomManager.joinRace(room, userName);
     const raceState = RoomManager.getRoomOverview(room).raceState;
-    return {...userKey, raceState};
+    return {userKey, raceState};
   });
 
   Server.tipc().addHandler("rejoinRace", (data) => {
     const {roomName, userName, userKey} = data;
-    LOGGER.info(`Request to join race: ${roomName}`);
+    LOGGER.info(`Request to rejoin race: ${roomName}`);
     const room = RoomManager.roomExists(roomName);
     if(!room) {
       throw new Error("Room not found");
@@ -91,9 +91,9 @@ export async function init() {
     if(!RoomManager.hasUserAccess(room, userName, userKey)) {
       throw new Error("Invalid user key");
     }
-    // Rejoin action?
+    // TODO: Rejoin action?
     const raceState = RoomManager.getRoomOverview(room).raceState;
-    return {raceState};
+    return {gameLogicalName: raceState.currentGame?.logicalName};
   });
 
   Server.tipc().addHandler("completeGame", (data) => {

@@ -6,7 +6,7 @@ import { AddressInfo } from 'ws';
 
 import { WebsocketContract, Logger, FunctionUtils } from '@grs/shared';
 
-import { ClientConfigService } from '../ClientConfigService.js';
+import { ClientConfigService } from './ClientConfigService.js';
 
 /************************************************************************
  *  Variables
@@ -79,9 +79,9 @@ export async function init(): Promise<void> {
       server.on("error", onError);
 
       // Setup shutdown hooks for the server
-      process.on("beforeExit", () => {
+      process.on("SIGINT", () => {
         initialized = false;
-        LOGGER.debug("Shutting down in a controlled manner");
+        LOGGER.info("Shutting down in a controlled manner");
         server?.close();
         tipcClient?.shutdown();
       });

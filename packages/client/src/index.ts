@@ -4,8 +4,9 @@ import { fileURLToPath } from "node:url";
 import { PathUtils } from '@grs/shared';
 
 import * as ClientConfigService from './ClientConfigService.js';
-import * as WebServer from './bizhawk/WebServer.js';
+import * as WebServer from './WebServer.js';
 import * as BizhawkController from './bizhawk/BizhawkController.js';
+import * as SaveStateService from './bizhawk/SaveStateService.js';
 import * as GameFinderService from './GameFinderService.js';
 import * as CommandLineService from './CommandLineService.js';
 import * as RaceService from './RaceService.js';
@@ -19,10 +20,10 @@ async function main() {
   await ClientConfigService.init();
   await GameFinderService.init();
   await WebServer.init();
-  await RaceService.init();
   await BizhawkController.init();
+  await SaveStateService.init();
   launchBizhawk(WebServer.getAddress().port);
 
-  await RaceService.joinRace();
+  await RaceService.init();
 }
 main();

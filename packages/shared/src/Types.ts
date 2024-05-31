@@ -1,5 +1,6 @@
 export type RaceGame = {
   gameName: string,
+  logicalName: string,
   completedByUser?: string,
 }
 

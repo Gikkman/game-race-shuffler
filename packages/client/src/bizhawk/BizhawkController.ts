@@ -2,8 +2,9 @@ import { Logger } from '@grs/shared';
 
 import * as BizhawkService from './BizhawkService.js';
 import * as GameFinderService from '../GameFinderService.js';
-import { bindGet, bindPost, getUserKey, tipc } from './WebServer.js';
-import { ClientConfigService } from '../ClientConfigService.js';
+import { bindGet, bindPost, tipc } from '../WebServer.js';
+import { getRoomConfig } from '../ClientConfigService.js';
+import { getUserKey } from '../RaceService.js';
 
 const LOGGER = Logger.getLogger("BizhawkController");
 let initialized = false;
@@ -16,7 +17,7 @@ export async function init() {
   bindGet("/bizhawk", (_, res) => {
     const event = BizhawkService.peekBizhawkEventQueue();
     if (event) {
-      const str = event.action + ":" + (event.path ? event.path : "");
+      const str = event.action + ":" + (event.path ?? "");
       LOGGER.info("<<< Sending " + str);
       res.send(str);
     }
@@ -33,13 +34,11 @@ export async function init() {
 
   bindPost("/bizhawk/complete", (_, res) => {
     LOGGER.debug("POST -> /bizhawk/complete");
-    const userName = ClientConfigService.getUserName();
-    const currentGame = BizhawkService.getCurrentGame();
-    const gameLogicalName = GameFinderService.getLogicalNameForGame(currentGame);
+    const {userName, roomName} = getRoomConfig();
     const userKey = getUserKey();
-    const roomName = ClientConfigService.getRoomName();
+    const currentGame = BizhawkService.getCurrentGame();
 
-    tipc().invoke("completeGame", {userName, gameLogicalName, userKey, roomName})
+    tipc().invoke("completeGame", {userName, gameLogicalName: currentGame.logicalName, userKey, roomName})
       .then((ok) => {
         if(ok){
           LOGGER.info("We marked game %s as completed", currentGame.gameName);
@@ -59,15 +58,17 @@ export async function init() {
   });
 
   tipc().addListener("loadGame", (loadData) => {
-    console.log(loadData);
-    if(loadData.roomName !== ClientConfigService.getRoomName()) {
+    const {roomName} = getRoomConfig();
+    if(loadData.roomName !== roomName) {
       return;
     }
+
     LOGGER.debug("TIPC request on 'loadGame'");
     const gameConfig = GameFinderService.getGameForLogicalName(loadData.gameLogicalName);
     if(!gameConfig) {
       return LOGGER.error("Argument 'name' doesn't map against a game: %s", loadData.gameLogicalName);
     }
+
     BizhawkService.loadGame(gameConfig);
   });
 
