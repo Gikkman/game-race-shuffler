@@ -48,17 +48,18 @@ export function roomNameInUse(roomName: string) {
 export function listRooms() {
   const roomList = [...rooms.values()];
   roomList.sort((a,b) => {
-    return a.created - b.created;
+    return a.createdAt - b.createdAt;
   });
   return roomList.map(e => e.roomName);
 }
 
 export function getRoomOverview(room: RoomState): RoomOverview {
-  const raceState = room.raceState.getStateSummary();
+  const raceStateData = room.raceState.getStateSummary();
   return {
+    roomId: room.roomId,
     roomName: room.roomName,
-    created: room.created,
-    raceState: raceState,
+    createdAt: room.createdAt,
+    raceStateData,
   };
 }
 

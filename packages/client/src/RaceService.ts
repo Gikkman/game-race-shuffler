@@ -1,16 +1,17 @@
-import { Logger, PathUtils } from "@grs/shared";
-import { ClientConfigService } from "./ClientConfigService.js";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { FunctionUtils, Logger, PathUtils, RoomOverview } from "@grs/shared";
+import { ClientConfigService } from "./ClientConfigService.js";
 import { tipc } from "./WebServer.js";
 import { getGameForLogicalName } from "./GameFinderService.js";
 import { loadGame } from "./bizhawk/BizhawkService.js";
+import { clearAllSavestates } from "./bizhawk/SaveStateService.js";
 
 const LOGGER = Logger.getLogger("RaceService");
 let initialized = false;
 
 let userKey: string;
-let raceDataFileLocation: string;
+let roomId: string;
 
 /************************************************************************
 *  Init
@@ -20,22 +21,33 @@ export async function init() {
   if(initialized) {
     return;
   }
+  const serverHost = ClientConfigService.getServerHost();
   const {roomName, roomKey, userName} = ClientConfigService.getRoomConfig();
 
-  raceDataFileLocation = path.join(ClientConfigService.getStateLocation(), roomName+".txt");
+  const roomData = await queryRoom(serverHost, roomName);
 
   let gameLogicalName: string|undefined;
+  const raceDataFileLocation = path.join(ClientConfigService.getStateLocation(), roomName+".json");
   if(PathUtils.existsSync(raceDataFileLocation)) {
-    LOGGER.info(`Attempting to rejoin room %s with name %s`, roomName, userName);
-    userKey = await fs.readFile(raceDataFileLocation, {encoding: "utf8"});
-    gameLogicalName = (await rejoinRace( {roomName, userKey, userName} )).gameLogicalName;
-    LOGGER.info(`Rejoin requiest successful`);
+    const roomDataFile = await readRoomDataFile(raceDataFileLocation);
+    if(roomDataFile.roomId === roomData.roomId) {
+      LOGGER.info(`Attempting to rejoin room %s with name %s`, roomName, userName);
+      userKey = roomDataFile.userKey;
+      roomId = roomDataFile.roomId;
+      gameLogicalName = (await rejoinRace( {roomName, userKey, userName} )).gameLogicalName;
+      LOGGER.info(`Rejoin requiest successful`);
+    }
+    else {
+      LOGGER.debug(`There existed a data file for room %s, but the roomId didn't match with the server. We assume this is another room that just shares name, and tries to join normally`, roomName);
+      clearAllSavestates();
+    }
   }
-  else {
+  if(userKey === undefined) {
     LOGGER.info(`Attempting to join room %s with name %s`, roomName, userName);
     const response = await joinRace({roomKey, roomName, userName});
-    writeUserKey(raceDataFileLocation, response.userKey);
+    writeRoomDataFile(raceDataFileLocation, response);
     userKey = response.userKey;
+    roomId = response.roomId;
     gameLogicalName = response.gameLogicalName;
     LOGGER.info(`Join requiest successful`);
   }
@@ -64,14 +76,40 @@ export function getUserKey() {
   return userKey;
 }
 
-
-function writeUserKey(where: string, userKey: string){
-  fs.writeFile(where, userKey, "utf8");
+export function getRoomId() {
+  return roomId;
 }
 
 /************************************************************************
 *  Internal functions for (re)joining a race
 ************************************************************************/
+async function queryRoom(serverHost: string, roomName: string): Promise<RoomOverview> {
+  const url = `${FunctionUtils.isSecureHost(serverHost) ? "https://" : "http://"}${serverHost}/api/room/${roomName}`;
+  try {
+    const res = await fetch(url);
+    return res.json();
+  }
+  catch(ex) {
+    LOGGER.error("Failed to query for room %s", roomName);
+    LOGGER.error(ex as Error);
+    process.exit(1);
+  }
+}
+
+async function readRoomDataFile(filePath: string) {
+  const content = await fs.readFile(filePath, {encoding: "utf8"});
+  const json = JSON.parse(content);
+  const {userKey, roomId} = json;
+  if(typeof userKey === "string" && typeof roomId === "string") {
+    return {userKey, roomId};
+  }
+  return {userKey: undefined, roomId: undefined};
+}
+
+async function writeRoomDataFile(where: string, data: {roomId: string, userKey: string}){
+  return fs.writeFile(where, JSON.stringify(data), "utf8");
+}
+
 async function joinRace(args: {roomName: string, userName: string, roomKey: string}) {
   const {roomName, roomKey, userName} = args;
   try {
@@ -81,6 +119,7 @@ async function joinRace(args: {roomName: string, userName: string, roomKey: stri
   }
   catch (e) {
     LOGGER.error("The server rejected our join request");
+    LOGGER.error(e as Error);
     process.exit(1);
   }
 }
@@ -94,6 +133,7 @@ async function rejoinRace(args: {roomName: string, userName: string, userKey: st
   }
   catch (e) {
     LOGGER.error("The server rejected our rejoin request");
+    LOGGER.error(e as Error);
     process.exit(1);
   }
 }

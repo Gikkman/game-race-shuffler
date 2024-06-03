@@ -24,9 +24,10 @@ export type CreateRoomRequest = {
 }
 
 export type RoomOverview = {
+  roomId: string,
   roomName: string,
-  created: number,
-  raceState: RaceStateOverview
+  createdAt: number,
+  raceStateData: RaceStateOverview
 }
 
 export function isCreateRoomRequest(obj: unknown): obj is CreateRoomRequest {

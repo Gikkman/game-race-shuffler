@@ -10,6 +10,8 @@ export type RaceStateData = {
   participants: RaceParticipant[],
   phase: RacePhase,
   games: RaceGame[],
+  swapQueueSize: number,
+  swapBlockedUntil: number,
   currentGame?: RaceGame,
 }
 
@@ -47,15 +49,8 @@ export default class RaceState {
   /************************************************************************
   *  Public methods
   ************************************************************************/
-  getStateSummary(): RaceStateOverview {
-    return {
-      phase: this.phase,
-      currentGame: this.currentGame,
-      participants: [...this.participants],
-      games: [...this.games],
-      swapQueueSize: this.swapQueueSize,
-      swapBlockedUntil: this.swapBlockedUntil,
-    };
+  getStateSummary(): RaceStateData {
+    return this.serialize();
   }
 
   startRace() {
@@ -134,10 +129,12 @@ export default class RaceState {
 
   serialize(): RaceStateData {
     return {
-      currentGame: this.currentGame,
-      games: this.games,
       phase: this.phase,
-      participants: this.participants,
+      currentGame: this.currentGame,
+      participants: [...this.participants],
+      games: [...this.games],
+      swapQueueSize: this.swapQueueSize,
+      swapBlockedUntil: this.swapBlockedUntil,
     };
   }
 
@@ -193,12 +190,6 @@ export default class RaceState {
     for(const p of this.participants) {
       p.leader = (mostScore.name.includes(p.userName));
       p.score = participantScores[p.userName] ?? 0;
-    }
-  }
-
-  private ensurePhase(desired: RacePhase, errorMessage: string) {
-    if (desired !== this.phase) {
-      throw new Error(`${errorMessage}. Race currently in phase ${this.phase}, must be in ${desired}`);
     }
   }
 }

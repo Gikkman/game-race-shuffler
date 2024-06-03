@@ -1,9 +1,11 @@
 import { FunctionUtils } from "@grs/shared";
 import RaceState, { StateUpdateCallback, type RaceStateData } from "./RaceState.js";
+import { randomUUID } from "node:crypto";
 
 export type RoomStateData = {
   raceStateData: RaceStateData,
-  created: number,
+  roomId: string,
+  createdAt: number,
   roomName: string,
   roomKey: string,
   adminKey: string,
@@ -21,7 +23,8 @@ type RoomStateArgs = {
 
 export default class RoomState {
   readonly raceState: RaceState;
-  readonly created: number;
+  readonly roomId: string;
+  readonly createdAt: number;
   readonly roomName: string;
   readonly roomKey: string;
   readonly adminKey: string;
@@ -30,9 +33,10 @@ export default class RoomState {
   readonly logicalNameToGameName: Record<string, string>;
 
   constructor(args:RoomStateArgs|RoomStateData, stateUpdateCallback: StateUpdateCallback) {
-    if("created" in args) {
+    if("createdAt" in args) {
       this.raceState = new RaceState(args.raceStateData, stateUpdateCallback);
-      this.created = args.created;
+      this.roomId = args.roomId;
+      this.createdAt = args.createdAt;
       this.roomName = args.roomName;
       this.roomKey = args.roomKey;
       this.adminKey = args.adminKey;
@@ -42,7 +46,8 @@ export default class RoomState {
     }
     else {
       this.raceState = new RaceState({games: args.games}, stateUpdateCallback);
-      this.created = Date.now();
+      this.roomId = randomUUID();
+      this.createdAt = Date.now();
       this.roomName = args.roomName;
       this.roomKey = args.roomKey;
       this.adminKey = args.adminKey;
@@ -61,7 +66,8 @@ export default class RoomState {
   serialize(): RoomStateData {
     return {
       raceStateData: this.raceState.serialize(),
-      created: this.created,
+      roomId: this.roomId,
+      createdAt: this.createdAt,
       roomName: this.roomName,
       roomKey: this.roomKey,
       adminKey: this.adminKey,

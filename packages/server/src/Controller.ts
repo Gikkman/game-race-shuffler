@@ -1,4 +1,4 @@
-import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest } from '@grs/shared';
+import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest, RoomOverview } from '@grs/shared';
 
 import * as Server from './Server.js';
 import * as RoomManager from './RoomManager.js';
@@ -20,7 +20,8 @@ export async function init() {
     if(!room) {
       return res.status(404).send("Room not found");
     }
-    return res.json(room);
+    const view: RoomOverview = room.serialize();
+    return res.json(view);
   });
 
   Server.bindPost("/api/room", (req, res) => {
@@ -77,8 +78,8 @@ export async function init() {
       throw new Error("User name already in use");
     }
     const userKey = RoomManager.joinRace(room, userName);
-    const raceState = RoomManager.getRoomOverview(room).raceState;
-    return {userKey, raceState};
+    const {roomId, raceStateData: raceState} = RoomManager.getRoomOverview(room);
+    return {userKey, roomId, gameLogicalName: raceState.currentGame?.logicalName};
   });
 
   Server.tipc().addHandler("rejoinRace", (data) => {
@@ -92,7 +93,7 @@ export async function init() {
       throw new Error("Invalid user key");
     }
     // TODO: Rejoin action?
-    const raceState = RoomManager.getRoomOverview(room).raceState;
+    const raceState = RoomManager.getRoomOverview(room).raceStateData;
     return {gameLogicalName: raceState.currentGame?.logicalName};
   });
 

@@ -15,7 +15,7 @@ const ready = ref(false);
 
 TipcListener.init().then(async () => {
   ServerApi.getRoom(roomName).then(room => {
-    raceState.value = room.raceState;
+    raceState.value = room.raceStateData;
   })
   .finally(() => {
     ready.value = true;

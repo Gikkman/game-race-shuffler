@@ -47,3 +47,7 @@ function numberToRoman(s: string) {
   default: return s;
   }
 }
+
+export function isSecureHost(host: string): boolean {
+  return (host.startsWith("localhost") || host.startsWith("10.") || host.startsWith("172.") || host.startsWith("192.168.")) ? false : true;
+}

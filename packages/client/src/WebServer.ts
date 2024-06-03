@@ -30,7 +30,7 @@ export async function init(): Promise<void> {
   const [host, port] = ClientConfigService.getServerHost().split(":");
   const serverHost = host ?? "grs.gikkman.com";
   const serverPort = parseInt(port || "443");
-  const serverProtocol = (serverHost.startsWith("localhost") || serverHost.startsWith("10.") || serverHost.startsWith("172.") || serverHost.startsWith("192.168.")) ? "ws" : "wss";
+  const serverProtocol = FunctionUtils.isSecureHost(serverHost) ? "wss" : "ws";
   const tipcConnectionManager = TipcNodeClient.create({
     host: serverHost,
     port: serverPort,
