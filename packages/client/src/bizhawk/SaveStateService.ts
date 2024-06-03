@@ -18,7 +18,7 @@ export async function init() {
   PathUtils.ensureDir(saveStateFolderPath);
 
   await cleanOutOldSaveStates(saveStateFolderPath);
-  const interval = setInterval(() => cleanOutOldSaveStates(saveStateFolderPath), 5*60*1000); // Every 5 minutes
+  const interval = setInterval(() => cleanOutOldSaveStates(saveStateFolderPath), 2*60*1000); // Every 2 minutes
   process.on("SIGINT", () => clearInterval(interval));
 
   initialized = true;

@@ -156,12 +156,14 @@ function pushBizhawkEventQueue(action: BizhawkAction, path?: string, callback?: 
  ************************************************************************/
 let launched = false;
 let launchTime: Date;
+let restartingBizhawkProcess = false;
 function internalLaunchBizhawk() {
   if (launched) {
     return;
   }
 
   launched = true;
+  restartingBizhawkProcess = false;
   launchTime = new Date();
 
   try {
@@ -187,7 +189,9 @@ function internalLaunchBizhawk() {
 
     proc.on('close', (code, signal) => {
       BIZ_LOGGER.debug(`[%s] Bizhawk closed with code: %d signal: %s`, launchTime, code, signal);
-      process.emit("SIGINT");
+      if(!restartingBizhawkProcess) {
+        process.emit("SIGINT");
+      }
     });
 
     proc.on('exit', (code, signal) => {
@@ -251,7 +255,7 @@ function checkBizhawkHealth(game: GameData, restartCycleCount: number, process?:
   const timeout = setTimeout(() => {
     bizhawkHealthTimeout(game, restartCycleCount, process);
     // Give longer timeout if we're in a restart, cause we gotta start the Bizhawk process too
-  }, 5_000 + (restartCycleCount ? 3_000 : 0));
+  }, 5_000 + (restartCycleCount > 0 ? 5_000 : 0));
   clearTimeout(healthCheckTimeout);
   healthCheckTimeout = timeout;
 }
@@ -284,6 +288,7 @@ async function bizhawkHealthTimeout(game: GameData, restartCycleCount: number, p
   });
 
   LOGGER.warn("Killing bizhawk process [%s]", new Date().toISOString());
+  restartingBizhawkProcess = true;
   process.kill();
 }
 
