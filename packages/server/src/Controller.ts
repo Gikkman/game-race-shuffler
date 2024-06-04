@@ -1,4 +1,4 @@
-import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest, RoomOverview } from '@grs/shared';
+import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest } from '@grs/shared';
 
 import * as Server from './Server.js';
 import * as RoomManager from './RoomManager.js';
@@ -20,7 +20,7 @@ export async function init() {
     if(!room) {
       return res.status(404).send("Room not found");
     }
-    const view: RoomOverview = room.serialize();
+    const view = room.getStateSummary();
     return res.json(view);
   });
 

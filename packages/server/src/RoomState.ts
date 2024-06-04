@@ -1,4 +1,4 @@
-import { FunctionUtils } from "@grs/shared";
+import { FunctionUtils, RaceGame, RoomOverview } from "@grs/shared";
 import RaceState, { StateUpdateCallback, type RaceStateData } from "./RaceState.js";
 import { randomUUID } from "node:crypto";
 
@@ -10,8 +10,6 @@ export type RoomStateData = {
   roomKey: string,
   adminKey: string,
   userKeys: Record<string, string>,
-  gameNameToLogicalName: Record<string, string>,
-  logicalNameToGameName: Record<string, string>,
 }
 
 type RoomStateArgs = {
@@ -41,8 +39,8 @@ export default class RoomState {
       this.roomKey = args.roomKey;
       this.adminKey = args.adminKey;
       this.userKeys = args.userKeys;
-      this.gameNameToLogicalName = args.gameNameToLogicalName;
-      this.logicalNameToGameName = args.logicalNameToGameName;
+      this.gameNameToLogicalName = toRecord(args.raceStateData.games, "gameName", "logicalName");
+      this.logicalNameToGameName = toRecord(args.raceStateData.games, "logicalName", "gameName");
     }
     else {
       this.raceState = new RaceState({games: args.games}, stateUpdateCallback);
@@ -63,17 +61,32 @@ export default class RoomState {
     }
   }
 
-  serialize(): RoomStateData {
+  getStateSummary(): RoomOverview {
     return {
-      raceStateData: this.raceState.serialize(),
+      createdAt: this.createdAt,
+      roomId: this.roomId,
+      roomName: this.roomName,
+      raceStateData: this.raceState.getStateSummary(),
+    };
+  }
+
+  __serialize(): RoomStateData {
+    return {
+      raceStateData: this.raceState.__serialize(),
       roomId: this.roomId,
       createdAt: this.createdAt,
       roomName: this.roomName,
       roomKey: this.roomKey,
       adminKey: this.adminKey,
       userKeys: this.userKeys,
-      gameNameToLogicalName: this.gameNameToLogicalName,
-      logicalNameToGameName: this.logicalNameToGameName,
     };
   }
+}
+
+function toRecord(games: RaceGame[], key: "gameName"|"logicalName", value: "gameName"|"logicalName"): Record<string, string> {
+  return games.reduce((record, currentEntity) => {
+    const val = currentEntity[value];
+    record[currentEntity[key]] = val;
+    return record;
+  }, {} as Record<string, string>);
 }

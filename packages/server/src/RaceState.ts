@@ -50,7 +50,7 @@ export default class RaceState {
   *  Public methods
   ************************************************************************/
   getStateSummary(): RaceStateData {
-    return this.serialize();
+    return this.__serialize();
   }
 
   startRace() {
@@ -127,7 +127,7 @@ export default class RaceState {
     this.updateState(...additionalStatesToSignal, "currentGame", "swapBlockedUntil");
   }
 
-  serialize(): RaceStateData {
+  __serialize(): RaceStateData {
     return {
       phase: this.phase,
       currentGame: this.currentGame,
