@@ -2,13 +2,26 @@ import { randomUUID, createHash } from "crypto";
 import { CreateRoomRequest, FunctionUtils, RaceStateUpdate, RoomOverview } from '@grs/shared';
 import * as Server from './Server.js';
 import RoomState from "./RoomState.js";
+import RoomRepository from "./RoomRepository.js";
 
 
 /************************************************************************
 *  Setup stuff
 ************************************************************************/
-
 const rooms = new Map<string, RoomState>();
+let initialized = false;
+
+export async function init() {
+  if(initialized) {
+    return;
+  }
+  const data = await RoomRepository.getAll();
+  data.forEach(elem => {
+    const room = new RoomState(elem, generateStateUpdateCallback(elem.roomName));
+    rooms.set(room.roomName, room);
+  });
+  initialized = true;
+}
 
 /************************************************************************
 *  Exported function
@@ -24,20 +37,13 @@ export function swapGame(room: RoomState) {
 
 export function createRoom(data: CreateRoomRequest) {
   const {roomName} = data;
-  const stateUpdateCallback = (update: RaceStateUpdate) => {
-    Server.tipc().send("raceStateUpdate", {...update, roomName});
-    if(update.changes.includes("currentGame") && update.currentGame) {
-      const gameLogicalName = FunctionUtils.calculateLogicalName(update.currentGame.gameName);
-      Server.tipc().send("loadGame", {roomName, gameLogicalName});
-    }
-    if(update.changes.includes("phase") && update.phase === "ENDED") {
-      const participants = update.participants;
-      Server.tipc().send("raceEnded", {roomName, participants});
-    }
-  };
+  const stateUpdateCallback = generateStateUpdateCallback(roomName);
   const adminKey = randomUUID();
   const roomState = new RoomState({...data, adminKey}, stateUpdateCallback);
+
   rooms.set(roomName, roomState);
+  RoomRepository.create(roomState.__serialize());
+
   return {adminKey};
 }
 
@@ -110,4 +116,23 @@ function generateUserKey(userName: string): string {
   const sha = createHash('sha1');
   const uuid = randomUUID();
   return sha.update(userName+uuid).digest('hex');
+}
+
+function generateStateUpdateCallback(roomName: string) {
+  return (update: RaceStateUpdate) => {
+    Server.tipc().send("raceStateUpdate", {...update, roomName});
+    if(update.changes.includes("currentGame") && update.currentGame) {
+      const gameLogicalName = FunctionUtils.calculateLogicalName(update.currentGame.gameName);
+      Server.tipc().send("loadGame", {roomName, gameLogicalName});
+    }
+    if(update.changes.includes("phase") && update.phase === "ENDED") {
+      const participants = update.participants;
+      Server.tipc().send("raceEnded", {roomName, participants});
+    }
+
+    const room = rooms.get(roomName);
+    if(room) {  // This can't really ever be falsy but I guess you never know
+      RoomRepository.update(room.__serialize());
+    }
+  };
 }

@@ -3,7 +3,11 @@ rm -rf ./dist
 mkdir -p ./dist
 
 npm run build
-docker run --rm -it -v $PWD:/home/bun/app oven/bun:1.1.8 build ./packages/client/src/index.ts --compile --outfile ./dist/grs-win --target=bun-windows-x64
+case "$OSTYPE" in
+  darwin*) bun build ./packages/client/src/index.ts --compile --outfile ./dist/grs-win --target=bun-windows-x64 ;;
+  linux*)  docker run --rm -it -v $PWD:/home/bun/app oven/bun:1.1.8 build ./packages/client/src/index.ts --compile --outfile ./dist/grs-win --target=bun-windows-x64 ;;
+  *) echo "Unknow OS: $OSTYPE" && exit 1;;
+esac;
 
 mkdir ./dist/games
 mkdir ./dist/states

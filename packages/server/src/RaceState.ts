@@ -36,6 +36,12 @@ export default class RaceState {
       this.phase = args.phase;
       this.games = args.games;
       this.currentGame = args.currentGame;
+
+      this.swapQueueSize = args.swapQueueSize;
+      this.swapBlockedUntil = args.swapBlockedUntil;
+      if(this.swapQueueSize) {
+        this.scheduledSwapBlock(args.swapBlockedUntil);
+      }
     }
     else {
       if (args.games.length < 1) {
@@ -50,7 +56,14 @@ export default class RaceState {
   *  Public methods
   ************************************************************************/
   getStateSummary(): RaceStateData {
-    return this.__serialize();
+    return {
+      phase: this.phase,
+      currentGame: this.currentGame,
+      participants: [...this.participants],
+      games: [...this.games],
+      swapQueueSize: this.swapQueueSize,
+      swapBlockedUntil: this.swapBlockedUntil,
+    };
   }
 
   startRace() {
@@ -113,7 +126,7 @@ export default class RaceState {
       return;
     }
     // The 'alternatives' array might be an empty here, if no more games are available, and then 'nextGame' will be undefined
-    const alternatives = this.games.filter(game => game.completedByUser === undefined).filter(game => game !== this.currentGame);
+    const alternatives = this.games.filter(game => game.completedByUser === undefined).filter(game => game.logicalName !== this.currentGame?.logicalName);
     const nextGame = alternatives[getRandomInt(alternatives.length)];
     if(!nextGame) {
       return LOGGER.info("Could not swap game. No more games available");
@@ -121,9 +134,7 @@ export default class RaceState {
     this.currentGame = nextGame;
 
     this.swapBlockedUntil = Date.now() + MIN_SWAP_DELAY_MILLIS;
-    this.swapBlockTimer = setTimeout(() => {
-      this.triggerQueuedSwapsIfExists();
-    }, MIN_SWAP_DELAY_MILLIS);
+    this.scheduledSwapBlock(this.swapBlockedUntil);
     this.updateState(...additionalStatesToSignal, "currentGame", "swapBlockedUntil");
   }
 
@@ -141,14 +152,6 @@ export default class RaceState {
   /************************************************************************
   *  Private methods
   ************************************************************************/
-  private triggerQueuedSwapsIfExists() {
-    this.swapBlockTimer = undefined;
-    if(this.swapQueueSize > 0) {
-      this.swapQueueSize--;
-      this.swapGameIfPossible("swapQueueSize");
-    }
-  }
-
   private updateState(...changedFields: (keyof RaceStateOverview)[]) {
     const state = this.getStateSummary();
     this.onStateUpdate({
@@ -191,6 +194,17 @@ export default class RaceState {
       p.leader = (mostScore.name.includes(p.userName));
       p.score = participantScores[p.userName] ?? 0;
     }
+  }
+
+  private scheduledSwapBlock(swapBlockUntilUnix: number) {
+    const timeout = Math.max(swapBlockUntilUnix - Date.now(), 0);
+    this.swapBlockTimer = setTimeout(() => {
+      this.swapBlockTimer = undefined;
+      if(this.swapQueueSize > 0) {
+        this.swapQueueSize--;
+        this.swapGameIfPossible("swapQueueSize");
+      }
+    }, timeout);
   }
 }
 

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 export type RoomStateData = {
   raceStateData: RaceStateData,
-  roomId: string,
+  _id: string,
   createdAt: number,
   roomName: string,
   roomKey: string,
@@ -33,7 +33,7 @@ export default class RoomState {
   constructor(args:RoomStateArgs|RoomStateData, stateUpdateCallback: StateUpdateCallback) {
     if("createdAt" in args) {
       this.raceState = new RaceState(args.raceStateData, stateUpdateCallback);
-      this.roomId = args.roomId;
+      this.roomId = args._id;
       this.createdAt = args.createdAt;
       this.roomName = args.roomName;
       this.roomKey = args.roomKey;
@@ -73,7 +73,7 @@ export default class RoomState {
   __serialize(): RoomStateData {
     return {
       raceStateData: this.raceState.__serialize(),
-      roomId: this.roomId,
+      _id: this.roomId,
       createdAt: this.createdAt,
       roomName: this.roomName,
       roomKey: this.roomKey,
