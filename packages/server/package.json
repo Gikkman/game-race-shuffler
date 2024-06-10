@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc --build --verbose",
     "dev": "tsx watch ./src/index.ts",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "test": "glob -c \"tsx --test\" \"./test/**/*.test.ts\""
   },
   "dependencies": {
     "@grs/shared": "^1.0.0",

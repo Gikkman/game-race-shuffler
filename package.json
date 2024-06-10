@@ -15,7 +15,8 @@
     "build:shared": "npm run build --workspace packages/shared -- --force",
     "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.ini",
     "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.ini",
-    "start:server": "npm run --workspace packages/server start"
+    "start:server": "npm run --workspace packages/server start",
+    "test": "npm run test --workspaces --if-present"
   },
   "keywords": [],
   "license": "AGPL-3.0",
@@ -33,6 +34,7 @@
     "@typescript-eslint/parser": "^6.18.0",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.25.0",
+    "glob": "^10.4.1",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
