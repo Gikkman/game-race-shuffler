@@ -33,7 +33,7 @@ export async function createRoom(data: CreateRoomRequest): Promise<{ adminKey: s
       return false;
     })
     .catch(ex => {
-      console.error(ex);
+      alert(ex);
       return false;
     });
 }

@@ -1,9 +1,12 @@
-import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview, FunctionUtils } from "@grs/shared";
+import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStateOverview, FunctionUtils, SwapModeConfig } from "@grs/shared";
+import SwapModeFactory from "./swapmode/SwapModeFactory.js";
+import { SwapMode } from "./swapmode/SwapMode.js";
 
 const MIN_SWAP_DELAY_MILLIS = 5000;
 
 type RaceStateArgs = {
   games: string[],
+  swapModeConfig: SwapModeConfig,
 }
 
 export type RaceStateData = {
@@ -13,6 +16,7 @@ export type RaceStateData = {
   swapQueueSize: number,
   swapBlockedUntil: number,
   currentGame?: RaceGame,
+  swapModeConfig: SwapModeConfig,
 }
 
 export type StateUpdateCallback = (update: RaceStateUpdate) => void;
@@ -28,9 +32,17 @@ export default class RaceState {
 
   private swapQueueSize = 0;
   private swapBlockedUntil = 0;
-  private swapBlockTimer?: NodeJS.Timer;
+  private swapBlockTimer?: NodeJS.Timeout;
+
+  private swapModeConfig: SwapModeConfig;
+  private swapMode: SwapMode;
+  private swapEventData: string[] = [];
 
   constructor(args: RaceStateArgs|RaceStateData, onStateUpdate: StateUpdateCallback) {
+    this.swapModeConfig = args.swapModeConfig;
+    this.swapMode = SwapModeFactory(args.swapModeConfig);
+    this.swapMode.bind((e) => this.swapModeBind(e));
+
     if("phase" in args) {
       this.participants = args.participants;
       this.phase = args.phase;
@@ -55,7 +67,7 @@ export default class RaceState {
   /************************************************************************
   *  Public methods
   ************************************************************************/
-  getStateSummary(): RaceStateData {
+  getStateSummary(): RaceStateOverview {
     return {
       phase: this.phase,
       currentGame: this.currentGame,
@@ -63,6 +75,8 @@ export default class RaceState {
       games: [...this.games],
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
+      swapMode: this.swapModeConfig.swapMode,
+      swapEventData: this.swapEventData,
     };
   }
 
@@ -146,7 +160,31 @@ export default class RaceState {
       games: [...this.games],
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
+      swapModeConfig: this.swapModeConfig,
     };
+  }
+
+  swapModeBind(eventData: string) {
+    LOGGER.info("Swap event received from SwapMode binding");
+
+    this.swapEventData.push(eventData);
+    if(this.swapEventData.length > 5) {
+      this.swapEventData = this.swapEventData.slice(1);
+    }
+
+    // If the race is active, trigger a swap
+    // Otherwise, just send a state update
+    if(this.phase==="ACTIVE") {
+      this.swapGameIfPossible("swapEventData");
+    }
+    else {
+      this.updateState("swapEventData");
+    }
+  }
+
+  cleanup() {
+    clearTimeout(this.swapBlockTimer);
+    this.swapMode.cleanup();
   }
 
   /************************************************************************

@@ -1,7 +1,7 @@
-import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest } from '@grs/shared';
+import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest, DeleteRoomRequest } from '@grs/shared';
 
 import * as Server from './Server.js';
-import * as RoomManager from './RoomManager.js';
+import * as RoomManager from './race/RoomManager.js';
 
 const LOGGER = Logger.getLogger("Controller");
 let initialized = false;
@@ -27,11 +27,29 @@ export async function init() {
   Server.bindPost("/api/room", (req, res) => {
     const body = req.body as CreateRoomRequest;
     LOGGER.info(`Request to create room: ${body.roomName}`);
-    if(!isCreateRoomRequest(body)) {
-      return res.status(400).send("Invalid request format");
+    try {
+      isCreateRoomRequest(body);
+    }
+    catch(e) {
+      return  res.status(400).send(e);
     }
     const adminKey = RoomManager.createRoom(body);
     return res.status(201).json(adminKey);
+  });
+
+  Server.bindDelete("/api/room/:name", (req, res) => {
+    const body = req.body as DeleteRoomRequest;
+    const {roomName, adminKey} = body;
+    LOGGER.info(`Request to delete room: ${body.roomName}`);
+    const room = RoomManager.roomExists(roomName);
+    if(!room) {
+      return res.status(400).send("Room not found");
+    }
+    if(!RoomManager.hasAdminAccess(room, adminKey)) {
+      return res.status(401).send("Invalid room key");
+    }
+    RoomManager.deleteRoom(room);
+    return res.status(201).send();
   });
 
   Server.bindPost("/api/room/:name/start", (req,res) => {

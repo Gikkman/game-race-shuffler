@@ -1,7 +1,9 @@
-import { PathUtils } from "@grs/shared";
+import { Logger, PathUtils } from "@grs/shared";
 import { RoomStateData } from "./RoomState.js";
 import Datastore from "nedb-promises";
+import InternalMessages from "../InternalMessages.js";
 
+const LOGGER = Logger.getLogger("RoomRepository");
 let db: Datastore<RoomStateData>;
 let initialized = false;
 
@@ -9,7 +11,8 @@ export default {
   init,
   getAll,
   create,
-  update
+  update,
+  remove,
 };
 /************************************************************************
 *  Exported functions
@@ -21,7 +24,13 @@ async function init() {
 
   const roomDbPath = PathUtils.pathRelativeToWorkspaceRoot("rooms.db");
   db = Datastore.create({filename: roomDbPath});
-  db.persistence.setAutocompactionInterval(10*60*1000);
+  LOGGER.debug("Db created at %s", roomDbPath);
+
+  InternalMessages().addListener("cleanupCron", () => {
+    LOGGER.debug("Starting compaction");
+    db.persistence.compactDatafile();
+    LOGGER.debug("Completed compaction");
+  });
 
   initialized = true;
 }
@@ -39,6 +48,11 @@ async function create(data: RoomStateData) {
 async function update(data: RoomStateData) {
   checkInitialized();
   return db.updateOne({_id: data._id}, data);
+}
+
+async function remove(roomId: string) {
+  checkInitialized();
+  return db.deleteOne({_id: roomId}, {});
 }
 
 /************************************************************************

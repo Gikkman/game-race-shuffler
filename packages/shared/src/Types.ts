@@ -20,6 +20,8 @@ export type RaceStateOverview = {
   currentGame?: RaceGame,
   swapQueueSize: number,
   swapBlockedUntil: number,
+  swapMode: string,
+  swapEventData: string[],
 }
 
 export type RaceStateUpdate = RaceStateOverview & {

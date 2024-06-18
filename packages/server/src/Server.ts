@@ -26,7 +26,15 @@ const LOGGER = Logger.getLogger("WEB");
  ************************************************************************/
 export async function init() {
   // Config server
-  app.use(express.json());
+  app.use(express.json({
+    verify(req, _, buf) {
+      // So we can access the raw body string in webhooks to verify their hmac
+      if(req.url?.includes("/webhook")) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (req as any).rawBody = buf.toString("utf8");
+      }
+    },
+  }));
   server = app.listen(port, "0.0.0.0");
 
   server.on('error', onError);
@@ -73,6 +81,15 @@ export function bindPost(url: string, callback: RequestHandler) {
   LOGGER.info("Bind POST -> " + url);
   app.post(url, (req, res, next) => {
     LOGGER.debug("POST -> %s", req.path);
+    callback(req, res, next);
+  });
+}
+
+export function bindDelete(url: string, callback: RequestHandler) {
+  ensureInitialized();
+  LOGGER.info("Bind DELETE -> " + url);
+  app.delete(url, (req, res, next) => {
+    LOGGER.debug("DELETE -> %s", req.path);
     callback(req, res, next);
   });
 }

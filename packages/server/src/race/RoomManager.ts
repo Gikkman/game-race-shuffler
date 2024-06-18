@@ -1,6 +1,6 @@
 import { randomUUID, createHash } from "crypto";
 import { CreateRoomRequest, FunctionUtils, RaceStateUpdate, RoomOverview } from '@grs/shared';
-import * as Server from './Server.js';
+import * as Server from '../Server.js';
 import RoomState from "./RoomState.js";
 import RoomRepository from "./RoomRepository.js";
 
@@ -45,6 +45,12 @@ export function createRoom(data: CreateRoomRequest) {
   RoomRepository.create(roomState.__serialize());
 
   return {adminKey};
+}
+
+export function deleteRoom(room: RoomState) {
+  rooms.delete(room.roomId);
+  room.raceState.cleanup();
+  RoomRepository.remove(room.roomId);
 }
 
 export function roomNameInUse(roomName: string) {
