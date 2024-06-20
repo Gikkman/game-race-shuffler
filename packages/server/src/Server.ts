@@ -51,7 +51,7 @@ export async function init() {
 
   await setupWebSocket(server);
 
-  process.on("beforeExit", () => {
+  process.on("SIGINT", () => {
     initialized = false;
     server?.close();
     tipcServer?.shutdown();

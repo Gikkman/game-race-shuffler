@@ -31,7 +31,7 @@ Server.bindServerHandler();
 const cleanupCron = setInterval(() => {
   InternalMessages.default().send("cleanupCron");
 }, 2*60*1000); //Every two minutes
-
-process.on("beforeExit", () => {
+process.on("SIGINT", () => {
+  console.log("Cleanup");
   clearInterval(cleanupCron);
 });

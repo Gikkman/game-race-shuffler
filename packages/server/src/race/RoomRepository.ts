@@ -24,12 +24,12 @@ async function init() {
 
   const roomDbPath = PathUtils.pathRelativeToWorkspaceRoot("rooms.db");
   db = Datastore.create({filename: roomDbPath});
-  LOGGER.debug("Db created at %s", roomDbPath);
+  LOGGER.debug("Db initialized at %s", roomDbPath);
 
   InternalMessages().addListener("cleanupCron", () => {
-    LOGGER.debug("Starting compaction");
+    LOGGER.debug("Starting compaction at %s", Date.now());
     db.persistence.compactDatafile();
-    LOGGER.debug("Completed compaction");
+    LOGGER.debug("Completed compaction at %s", Date.now());
   });
 
   initialized = true;

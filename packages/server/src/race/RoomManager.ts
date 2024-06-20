@@ -20,6 +20,12 @@ export async function init() {
     const room = new RoomState(elem, generateStateUpdateCallback(elem.roomName));
     rooms.set(room.roomName, room);
   });
+
+  process.on("SIGINT", () => {
+    for(const room of rooms.values()) {
+      room.raceState.cleanup();
+    }
+  });
   initialized = true;
 }
 
