@@ -28,7 +28,8 @@ async function init() {
 
   InternalMessages().addListener("cleanupCron", () => {
     LOGGER.debug("Starting compaction at %s", Date.now());
-    db.persistence.compactDatafile();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db as any).compactDatafile();
     LOGGER.debug("Completed compaction at %s", Date.now());
   });
 
