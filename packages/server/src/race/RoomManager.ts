@@ -3,6 +3,7 @@ import { CreateRoomRequest, FunctionUtils, RaceStateUpdate, RoomOverview } from 
 import * as Server from '../Server.js';
 import RoomState from "./RoomState.js";
 import RoomRepository from "./RoomRepository.js";
+import InternalMessages from "../InternalMessages.js";
 
 
 /************************************************************************
@@ -19,6 +20,16 @@ export async function init() {
   data.forEach(elem => {
     const room = new RoomState(elem, generateStateUpdateCallback(elem.roomName));
     rooms.set(room.roomName, room);
+  });
+
+  InternalMessages().addListener("cleanupCron", () => {
+    const now = Date.now();
+    for(const room of rooms.values()) {
+      const state = room.getStateSummary();
+      if(now > state.liveUntil) {
+        // Archive old room
+      }
+    }
   });
 
   process.on("SIGINT", () => {
@@ -72,13 +83,7 @@ export function listRooms() {
 }
 
 export function getRoomOverview(room: RoomState): RoomOverview {
-  const raceStateData = room.raceState.getStateSummary();
-  return {
-    roomId: room.roomId,
-    roomName: room.roomName,
-    createdAt: room.createdAt,
-    raceStateData,
-  };
+  return room.getStateSummary();
 }
 
 export function joinRace(room: RoomState, userName: string): string {
