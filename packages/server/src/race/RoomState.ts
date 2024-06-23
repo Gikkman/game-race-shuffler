@@ -19,6 +19,8 @@ type RoomStateArgs = {
   roomKey: string,
   adminKey: string,
   games: string[],
+  swapMinCooldown: number,
+  swapMaxCooldown: number,
   swapModeConfig: SwapModeConfig,
 }
 
@@ -46,7 +48,7 @@ export default class RoomState {
       this.logicalNameToGameName = toRecord(args.raceStateData.games, "logicalName", "gameName");
     }
     else {
-      this.raceState = new RaceState({games: args.games, swapModeConfig: args.swapModeConfig}, stateUpdateCallback);
+      this.raceState = new RaceState(args, stateUpdateCallback);
       this.roomId = randomUUID();
       this.createdAt = Date.now();
       this.roomName = args.roomName;

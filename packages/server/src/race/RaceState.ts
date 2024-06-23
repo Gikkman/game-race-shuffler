@@ -2,11 +2,11 @@ import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStat
 import SwapModeFactory from "./swapmode/SwapModeFactory.js";
 import { SwapMode } from "./swapmode/SwapMode.js";
 
-const MIN_SWAP_DELAY_MILLIS = 5000;
-
 type RaceStateArgs = {
   games: string[],
   swapModeConfig: SwapModeConfig,
+  swapMinCooldown: number,
+  swapMaxCooldown: number,
 }
 
 export type RaceStateData = {
@@ -17,6 +17,8 @@ export type RaceStateData = {
   swapBlockedUntil: number,
   currentGame?: RaceGame,
   swapModeConfig: SwapModeConfig,
+  swapMinCooldown: number,
+  swapMaxCooldown: number,
 }
 
 export type StateUpdateCallback = (update: RaceStateUpdate) => void;
@@ -34,6 +36,9 @@ export default class RaceState {
   private swapBlockedUntil = 0;
   private swapBlockTimer?: NodeJS.Timeout;
 
+  private swapMinCooldown: number;
+  private swapMaxCooldown: number;
+
   private swapModeConfig: SwapModeConfig;
   private swapMode: SwapMode;
   private swapEventData: string[] = [];
@@ -42,6 +47,9 @@ export default class RaceState {
     this.swapModeConfig = args.swapModeConfig;
     this.swapMode = SwapModeFactory(args.swapModeConfig);
     this.swapMode.bind((e) => this.swapModeBind(e));
+
+    this.swapMinCooldown = args.swapMinCooldown ?? 5;
+    this.swapMaxCooldown = args.swapMaxCooldown ?? 5;
 
     if("phase" in args) {
       this.participants = args.participants;
@@ -76,6 +84,8 @@ export default class RaceState {
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
       swapMode: this.swapModeConfig.swapMode,
+      swapMinCooldown: this.swapMinCooldown,
+      swapMaxCooldown: this.swapMaxCooldown,
       swapEventData: this.swapEventData,
     };
   }
@@ -147,7 +157,7 @@ export default class RaceState {
     }
     this.currentGame = nextGame;
 
-    this.swapBlockedUntil = Date.now() + MIN_SWAP_DELAY_MILLIS;
+    this.swapBlockedUntil = this.generateSwapBlockUntil();
     this.scheduledSwapBlock(this.swapBlockedUntil);
     this.updateState(...additionalStatesToSignal, "currentGame", "swapBlockedUntil");
   }
@@ -161,6 +171,8 @@ export default class RaceState {
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
       swapModeConfig: this.swapModeConfig,
+      swapMinCooldown: this.swapMinCooldown,
+      swapMaxCooldown: this.swapMaxCooldown,
     };
   }
 
@@ -243,6 +255,14 @@ export default class RaceState {
         this.swapGameIfPossible("swapQueueSize");
       }
     }, timeout);
+  }
+
+
+  private generateSwapBlockUntil() {
+    const min = Math.ceil(this.swapMinCooldown);
+    const max = Math.floor(this.swapMaxCooldown);
+    const delayLenght = (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
+    return Date.now() + delayLenght;
   }
 }
 

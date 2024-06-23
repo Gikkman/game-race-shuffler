@@ -137,11 +137,14 @@ function generateUserKey(userName: string): string {
 
 function generateStateUpdateCallback(roomName: string) {
   return (update: RaceStateUpdate) => {
+
     Server.tipc().send("raceStateUpdate", {...update, roomName});
+
     if(update.changes.includes("currentGame") && update.currentGame) {
       const gameLogicalName = FunctionUtils.calculateLogicalName(update.currentGame.gameName);
       Server.tipc().send("loadGame", {roomName, gameLogicalName});
     }
+
     if(update.changes.includes("phase") && update.phase === "ENDED") {
       const participants = update.participants;
       Server.tipc().send("raceEnded", {roomName, participants});

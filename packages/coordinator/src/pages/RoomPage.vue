@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { RaceStateOverview } from '@grs/shared';
+import { RaceStateOverview, RoomOverview } from '@grs/shared';
 import RaceStateView from '../components/RaceStateView.vue';
 import RaceControls from '../components/RaceControls.vue';
 import * as TipcListener from '../scripts/TipcListener';
 import * as ServerApi from "../scripts/ServerApi";
 import * as Router from '../scripts/Router';
+import RaceFooter from '../components/RaceFooter.vue';
 
 const roomName = Router.getRoute().params["name"] as string;
 
 const connected = TipcListener.connected;
+const roomState = ref<RoomOverview>();
 const raceState = ref<RaceStateOverview>();
 const ready = ref(false);
 
 TipcListener.init().then(async () => {
   ServerApi.getRoom(roomName).then(room => {
+    roomState.value = room;
     raceState.value = room.raceStateData;
   })
   .finally(() => {
@@ -40,10 +43,12 @@ TipcListener.init().then(async () => {
       ----------------
     </div>
     <div v-if="ready">
-      <div v-if="raceState">
+      <div v-if="raceState && roomState">
         <RaceStateView :raceState />
         <br>
         <RaceControls :roomName />
+        <br>
+        <RaceFooter :roomState />
       </div>
       <h1 v-else>
         Room not found

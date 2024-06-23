@@ -22,6 +22,9 @@ const swapModes = ref([
 const swapModeSelected = ref(swapModes.value[0]);
 const swapModeExtra = ref("");
 
+const swapMinCooldown = ref(5);
+const swapMaxCooldown = ref(15);
+
 const newGame = ref("")
 
 async function submit() {
@@ -30,6 +33,8 @@ async function submit() {
     roomKey: roomKey.value,
     games: [...games.value],
     swapModeConfig: buildSwapModeConfig(),
+    swapMinCooldown: swapMinCooldown.value,
+    swapMaxCooldown: swapMaxCooldown.value,
   }
   const res = await createRoom(data);
   if (res) {
@@ -80,14 +85,22 @@ function buildSwapModeConfig(): SwapModeConfig {
       </tr>
     </table>
 
-    <h3>Swap Mode Config</h3>
+    <h3>Swap Config</h3>
     <div class="pane-h swap-mode-pane">
-      <select v-model="swapModeSelected">
+      <select class="swap-mode-select" v-model="swapModeSelected">
         <option v-for="mode in swapModes" :value="mode">
           {{ mode.text }}
         </option>
       </select>
       <input class="wide-input" v-model="swapModeExtra" autocomplete="off" :placeholder="swapModeSelected.desc" :disabled="swapModeSelected.value == 'manual'">
+    </div>
+    <div class="pane-h swap-cd-pane">
+      <div class="pane-h">
+        <div>Swap Min Cooldown</div><input class="num-input" type="number" v-bind:max="swapMaxCooldown" v-model="swapMinCooldown" min="3">
+      </div>
+      <div class="pane-h">
+        <div>Swap Max Cooldown</div><input class="num-input" type="number" v-bind:min="swapMinCooldown" v-model="swapMaxCooldown">
+      </div>
     </div>
 
     <div class="submit-button">
@@ -112,8 +125,16 @@ function buildSwapModeConfig(): SwapModeConfig {
 .swap-mode-pane {
   height: 40px;
 }
-
+.swap-mode-select {
+  padding: 5px;
+}
 .submit-button {
   margin-top: 80px;
+}
+.swap-cd-pane {
+  gap: 30px;
+}
+.num-input {
+  width: 40px;
 }
 </style>

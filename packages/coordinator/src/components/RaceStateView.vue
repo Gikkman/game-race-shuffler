@@ -2,9 +2,10 @@
 import { RaceStateOverview } from '@grs/shared';
 
 defineProps<{ raceState: RaceStateOverview }>();
+
 let calculateSwapBlockedUntil = (unixMillis: number) => {
   if(unixMillis < Date.now()) return "-";
-  return new Date(unixMillis).toTimeString().split(" ")[0];
+  return new Date(unixMillis).toLocaleTimeString(navigator.language).split(" ")[0];
 }
 </script>
 
@@ -19,6 +20,14 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
     <h3>
       Swapping Insights
     </h3>
+    <div class="pane-h tiny-text">
+      <div>
+        Min cooldown: {{ raceState.swapMinCooldown }} sec
+      </div>
+      <div>
+        Max cooldown: {{ raceState.swapMaxCooldown }} sec
+      </div>
+    </div>
     <div class="pane-h">
       <div class="pane-v slim">
         <div>

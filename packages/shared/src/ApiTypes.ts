@@ -22,6 +22,8 @@ export type CreateRoomRequest = {
   roomKey: string,
   games: string[],
   swapModeConfig: SwapModeConfig,
+  swapMinCooldown: number,
+  swapMaxCooldown: number,
 }
 
 export type DeleteRoomRequest = {
@@ -34,6 +36,7 @@ export type RoomOverview = {
   roomName: string,
   createdAt: number,
   liveUntil: number,
+  archivedAt?: number,
   raceStateData: RaceStateOverview
 }
 
@@ -56,6 +59,18 @@ export function isCreateRoomRequest(obj: unknown): obj is CreateRoomRequest {
     }
     if(typeof createRoomObj.roomKey !== 'string') {
       throw "Property 'roomKey' required";
+    }
+    if(typeof createRoomObj.swapMinCooldown !== "number") {
+      throw "Property 'swapMinCooldown' required";
+    }
+    if(typeof createRoomObj.swapMaxCooldown !== "number") {
+      throw "Property 'swapMaxCooldown' required";
+    }
+    if(createRoomObj.swapMinCooldown > createRoomObj.swapMaxCooldown) {
+      throw "Property 'swapMinCooldown' may not be a larger number than 'swapMaxCooldown'";
+    }
+    if(createRoomObj.swapMaxCooldown < createRoomObj.swapMinCooldown) {
+      throw "Property 'swapMaxCooldown' may not be a lesser number than 'swapMinCooldown'";
     }
     if(!regex.test(createRoomObj.roomName)) {
       throw "Invalid 'roomName' format. Only letters, number or underscores allowed";

@@ -16,10 +16,13 @@
 .pane-h {
   display: flex;
   flex-direction: row;
-  width: 100%;
   gap: 16px;
   justify-content: center;
   align-items: center;
+}
+
+.tiny-text {
+  font-size: 13px;
 }
 
 input {
