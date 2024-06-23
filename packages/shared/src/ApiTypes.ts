@@ -33,6 +33,7 @@ export type RoomOverview = {
   roomId: string,
   roomName: string,
   createdAt: number,
+  liveUntil: number,
   raceStateData: RaceStateOverview
 }
 

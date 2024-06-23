@@ -2,6 +2,8 @@ import { FunctionUtils, RaceGame, RoomOverview, SwapModeConfig } from "@grs/shar
 import RaceState, { StateUpdateCallback, type RaceStateData } from "./RaceState.js";
 import { randomUUID } from "node:crypto";
 
+const ROOM_MILLIS_TO_EXIST = 24 * 60 * 60 * 1000; // 24 hours
+
 export type RoomStateData = {
   raceStateData: RaceStateData,
   _id: string,
@@ -65,6 +67,7 @@ export default class RoomState {
   getStateSummary(): RoomOverview {
     return {
       createdAt: this.createdAt,
+      liveUntil: this.createdAt + ROOM_MILLIS_TO_EXIST,
       roomId: this.roomId,
       roomName: this.roomName,
       raceStateData: this.raceState.getStateSummary(),
