@@ -22,8 +22,8 @@ const swapModes = ref([
 const swapModeSelected = ref(swapModes.value[0]);
 const swapModeExtra = ref("");
 
-const swapMinCooldown = ref(5);
-const swapMaxCooldown = ref(15);
+const swapMinCooldown = ref(10);
+const swapMaxCooldown = ref(10);
 
 const newGame = ref("")
 

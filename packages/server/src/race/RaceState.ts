@@ -90,11 +90,6 @@ export default class RaceState {
     };
   }
 
-  startRace() {
-    this.phase = "ACTIVE";
-    this.swapGameIfPossible("phase");
-  }
-
   addParticipant(userName: string) {
     if (this.participants.find(e => e.userName === userName)) {
       return LOGGER.info(`Could not add participant. A user named %s already exists`, userName);
@@ -189,6 +184,19 @@ export default class RaceState {
   /************************************************************************
   *  Admin control functions
   ************************************************************************/
+  adminControl_changePhase(phase: RacePhase) {
+    if(this.phase === phase) {
+      return;
+    }
+    this.phase = phase;
+
+    if(phase === "ACTIVE" && !this.currentGame) {
+      this.swapGameIfPossible("phase");
+    }
+    else {
+      this.updateState("phase");
+    }
+  }
 
   adminControl_manualSwapToGame(gameName: string) {
     LOGGER.debug("Admin request to swap to game %s", gameName);

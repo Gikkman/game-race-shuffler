@@ -1,20 +1,34 @@
-import { RaceStateOverview } from "./Types.js";
+import { RacePhase, RaceStateOverview } from "./Types.js";
 
-export type StartRaceRequest = {
+export type RaceAdminAction = {
   roomName: string,
   adminKey: string,
+  command: RaceAdminSwapRandomGame
+          | RaceAdminSwapToGame
+          | RaceAdminChangeRacePhase
+          | RaceAdminCompleteGame
+          | RaceAdminUncompleteGame
 }
-
-export type SwapGameRequest = {
-  roomName: string,
-  adminKey: string,
+type RaceAdminSwapRandomGame = {
+  action: "swapRandomGame"
+};
+type RaceAdminSwapToGame = {
+  action: "swapToGame",
+  gameName: string,
+};
+type RaceAdminChangeRacePhase = {
+  action: "changeRacePhase",
+  phase: RacePhase,
+};
+type RaceAdminCompleteGame = {
+  action: "completeGame",
+  gameName: string,
+  participantName: string,
 }
-
-export type CompleteGameRequest = {
-  roomName: string,
-  userName: string,
-  adminKey: string,
-  gameLogicalName: string,
+type RaceAdminUncompleteGame = {
+  action: "uncompleteGame",
+  gameName: string,
+  participantName: string,
 }
 
 export type CreateRoomRequest = {

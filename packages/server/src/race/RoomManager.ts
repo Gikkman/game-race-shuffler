@@ -1,5 +1,5 @@
 import { randomUUID, createHash } from "crypto";
-import { CreateRoomRequest, FunctionUtils, RaceStateUpdate, RoomOverview } from '@grs/shared';
+import { CreateRoomRequest, FunctionUtils, RacePhase, RaceStateUpdate, RoomOverview } from '@grs/shared';
 import * as Server from '../Server.js';
 import RoomState from "./RoomState.js";
 import RoomRepository from "./RoomRepository.js";
@@ -44,12 +44,12 @@ export async function init() {
 *  Exported function
 ************************************************************************/
 
-export function startRace(room: RoomState) {
-  room.raceState.startRace();
+export function changeRacePhase(room: RoomState, phase: RacePhase) {
+  room.raceState.adminControl_changePhase(phase);
 }
 
 export function swapGame(room: RoomState) {
-  room.raceState.swapGameIfPossible();
+  room.raceState.adminControl_manualSwapRandom();
 }
 
 export function createRoom(data: CreateRoomRequest) {

@@ -17,10 +17,7 @@ function startRace() {
     return;
   }
   if(confirm("Really start race?")) {
-    ServerApi.startRace({
-      roomName: props.roomName,
-      adminKey: adminKey.value,
-    })
+    ServerApi.startRace({adminKey: adminKey.value, roomName: props.roomName})
   }
 }
 function swapGame() {
@@ -28,10 +25,7 @@ function swapGame() {
     return;
   }
   if(confirm("Really swap game?")) {
-    ServerApi.swapGame({
-      roomName: props.roomName,
-      adminKey: adminKey.value,
-    })
+    ServerApi.swapGame({adminKey: adminKey.value, roomName: props.roomName})
   }
 }
 </script>

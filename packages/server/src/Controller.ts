@@ -1,4 +1,4 @@
-import { Logger, CreateRoomRequest, StartRaceRequest, isCreateRoomRequest, SwapGameRequest, DeleteRoomRequest } from '@grs/shared';
+import { Logger, CreateRoomRequest, isCreateRoomRequest, DeleteRoomRequest, RaceAdminAction } from '@grs/shared';
 
 import * as Server from './Server.js';
 import * as RoomManager from './race/RoomManager.js';
@@ -18,7 +18,7 @@ export async function init() {
   Server.bindGet("/api/room/:name", (req, res) => {
     const room = RoomManager.roomExists(req.params['name']??"UNKNOWN");
     if(!room) {
-      return res.status(404).send("Room not found");
+      return res.status(400).send("Room not found");
     }
     const view = room.getStateSummary();
     return res.json(view);
@@ -33,6 +33,11 @@ export async function init() {
     catch(e) {
       return  res.status(400).send(e);
     }
+    const room = RoomManager.roomExists(body.roomName);
+    if(room) {
+      return res.status(400).send(`Room with name ${body.roomName} already exists`);
+    }
+
     const adminKey = RoomManager.createRoom(body);
     return res.status(201).json(adminKey);
   });
@@ -46,41 +51,72 @@ export async function init() {
       return res.status(400).send("Room not found");
     }
     if(!RoomManager.hasAdminAccess(room, adminKey)) {
-      return res.status(401).send("Invalid room key");
+      return res.status(401).send("Invalid admin key");
     }
     RoomManager.deleteRoom(room);
     return res.status(201).send();
   });
 
-  Server.bindPost("/api/room/:name/start", (req,res) => {
-    const body = req.body as StartRaceRequest;
-    const {roomName, adminKey} = body;
-    LOGGER.info(`Request to start race: ${roomName}`);
-    const room = RoomManager.roomExists(roomName);
-    if(!room) {
-      return res.status(400).send("Room not found");
-    }
-    if(!RoomManager.hasAdminAccess(room, adminKey)) {
-      return res.status(401).send("Invalid room key");
-    }
-    RoomManager.startRace(room);
-    return res.status(201).send();
-  });
+  /************************************************************************
+   *  Admin Controls for Races
+  ************************************************************************/
+  Server.bindPost("/api/room/:name/admin", (req, res) => {
+    const body = req.body as RaceAdminAction;
+    LOGGER.info(`Request to admin race %s`, body.roomName);
 
-  Server.bindPost("/api/room/:name/swap", (req,res) => {
-    const body = req.body as SwapGameRequest;
-    LOGGER.info(`Request to swap game: ${body.roomName}`);
+    if(!body.command || !body.command.action) {
+      return res.send(400).send("Invalid 'command' parameter");
+    }
 
     const room = RoomManager.roomExists(body.roomName);
     if(!room) {
       return res.status(400).send("Room not found");
     }
     if(!RoomManager.hasAdminAccess(room, body.adminKey)) {
-      return res.status(401).send("Invalid room key");
+      return res.status(401).send("Invalid admin key");
     }
-    RoomManager.swapGame(room);
-    return res.status(201).send();
+
+    const roomState = room.getStateSummary();
+    const command = body.command;
+    switch(command.action) {
+
+    case "changeRacePhase": {
+      const currentPhase = roomState.raceStateData.phase;
+      if(!["NEW","ACTIVE","ENDED"].includes(command.phase)) {
+        return res.status(400).send("Unknown phase " + command.phase);
+      }
+      if(currentPhase === command.phase) {
+        return res.status(400).send("Race already in phase " + command.phase);
+      }
+      RoomManager.changeRacePhase(room, command.phase);
+      break;
+    }
+
+    case "swapRandomGame":{
+      RoomManager.swapGame(room);
+      break;
+    }
+
+    case "swapToGame":{
+      break;
+    }
+
+    case "completeGame":{
+      RoomManager.completeGame(room, command.participantName, command.gameName);
+      break;
+    }
+
+    case "uncompleteGame":{
+      break;
+    }
+
+    }
+    return res.status(204).send("");
   });
+
+  /************************************************************************
+  *  TIPC handlers
+  ************************************************************************/
 
   Server.tipc().addHandler("joinRace", (data) => {
     const {roomName, roomKey, userName} = data;
