@@ -120,11 +120,11 @@ function handleWebhook(req: Request) {
 /**
  * Verifies a Tiltify Webhook Signature is valid
  */
-const calculateSignature = (secret: string, timestamp: string, body: string) => {
+function calculateSignature(secret: string, timestamp: string, body: string) {
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(`${timestamp}.${body}`);
   return hmac.digest('base64');
-};
+}
 
 function cleanupOldWebhookEventIds() {
   LOGGER.debug("Cleaning out old webhook events");

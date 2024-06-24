@@ -14,14 +14,20 @@ export class TiltifySwapMode implements SwapMode{
     this.campaignId = campaignId;
 
     this.handler = InternalMessages().addListener("tiltifyWebhook", (event) => {
-      if(event.campaign_id !== this.campaignId) {
-        LOGGER.debug("Webhook campaignId did not match. Skipping");
-        return;
+      const matchesCampaignId = event.campaign_id === this.campaignId;
+      const acceptAnyCampaign = this.campaignId === "*";
+      if( matchesCampaignId || acceptAnyCampaign ) {
+        if( this.sink ) {
+          LOGGER.debug("Webhook campaignId matched. Sending event to sink");
+          const info = `${event.donor_name}: ${event.amount.value}${event.amount.currency}`;
+          this.sink( info );
+        }
+        else {
+          LOGGER.warn("Webhook matched, but no event sink was set. Skipping");
+        }
       }
-      if(this.sink) {
-        LOGGER.debug("Webhook campaignId matched. Sending event to sink");
-        const info = `${event.donor_name}: ${event.amount.value}${event.amount.currency}`;
-        this.sink( info );
+      else {
+        LOGGER.debug("Webhook campaignId did not match. Skipping");
       }
     });
   }
