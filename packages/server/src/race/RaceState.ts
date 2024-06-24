@@ -60,7 +60,7 @@ export default class RaceState {
       this.swapQueueSize = args.swapQueueSize;
       this.swapBlockedUntil = args.swapBlockedUntil;
       if(this.swapQueueSize) {
-        this.scheduledSwapBlock(args.swapBlockedUntil);
+        this.startSwapBlockTimer(args.swapBlockedUntil);
       }
     }
     else {
@@ -104,7 +104,7 @@ export default class RaceState {
     return true;
   }
 
-  completeGame(gameName: string, completedByUser: string) {
+  completeGame(gameName: string, participantName: string) {
     const game = this.games.find(e => e.gameName === gameName);
     if (!game) {
       return LOGGER.warn(`Could not mark game '%s' as completed. No such game in the race`, gameName);
@@ -113,9 +113,9 @@ export default class RaceState {
       return LOGGER.warn(`Could not mark game as completed. Game '%s' already marked as completed by participant '%s'`, gameName, game.completedByUser);
     }
 
-    const participant = this.participants.find(e => e.userName === completedByUser);
+    const participant = this.participants.find(e => e.userName === participantName);
     if (!participant) {
-      return LOGGER.warn(`Could not mark game as completed. No user named '%s' registed in the race`, completedByUser);
+      return LOGGER.warn(`Could not mark game as completed. No user named '%s' registed in the race`, participantName);
     }
 
     game.completedByUser = participant.userName;
@@ -128,19 +128,6 @@ export default class RaceState {
     else {
       this.swapGameIfPossible("participants");
     }
-  }
-
-  setCurrentGame(gameName: string) {
-    if(this.currentGame?.gameName === gameName) {
-      return LOGGER.info(`Could not set current game to %s. It is already the current game`, gameName);
-    }
-    const nextGame = this.games.find(e => e.gameName === gameName);
-    if(!nextGame) {
-      return LOGGER.warn(`Could not set current game to %s. No such game in the race`, gameName);
-    }
-
-    this.currentGame = nextGame;
-    this.updateState("currentGame");
   }
 
   swapGameIfPossible(...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
@@ -158,7 +145,7 @@ export default class RaceState {
     this.currentGame = nextGame;
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
-    this.scheduledSwapBlock(this.swapBlockedUntil);
+    this.startSwapBlockTimer(this.swapBlockedUntil);
     this.updateState(...additionalStatesToSignal, "currentGame", "swapBlockedUntil");
   }
 
@@ -197,6 +184,68 @@ export default class RaceState {
   cleanup() {
     clearTimeout(this.swapBlockTimer);
     this.swapMode.cleanup();
+  }
+
+  /************************************************************************
+  *  Admin control functions
+  ************************************************************************/
+
+  adminControl_manualSwapToGame(gameName: string) {
+    LOGGER.debug("Admin request to swap to game %s", gameName);
+    if(this.currentGame && this.currentGame.gameName === gameName) {
+      return LOGGER.debug("Swapping to specific game is not allowed when it is already the current game");
+    }
+    if(this.phase === "ACTIVE") {
+      return LOGGER.debug("Swapping to specific game is not allowed when race is active");
+    }
+
+    const nextGame = this.games.find(e => e.gameName === gameName);
+    if(!nextGame) {
+      return LOGGER.debug("Swapping to specific game is not possible when the game is not in the race");
+    }
+
+    this.swapEventData.push("Manual Admin Swap");
+    if(this.swapEventData.length > 5) {
+      this.swapEventData = this.swapEventData.slice(1);
+    }
+
+    this.currentGame = nextGame;
+    this.updateState("currentGame", "swapEventData");
+  }
+
+  adminControl_manualSwapRandom() {
+    LOGGER.debug("Admin request to swap to random game");
+    this.swapEventData.push("Manual Admin Swap");
+    if(this.swapEventData.length > 5) {
+      this.swapEventData = this.swapEventData.slice(1);
+    }
+    this.swapGameIfPossible("swapEventData");
+  }
+
+  adminControl_markGameAsCompleted(gameName: string, participantName: string) {
+    LOGGER.debug("Admin request to game %s as completed by participant %s", gameName, participantName);
+    this.completeGame(gameName, participantName);
+  }
+
+  adminControl_markGameAsUncompleted(gameName: string) {
+    LOGGER.debug("Admin request to remove completed status from game %s", gameName);
+    const game = this.games.find(e => e.gameName === gameName);
+    if (!game) {
+      return LOGGER.warn(`Could not remove completed status from game '%s'. No such game in the race`, gameName);
+    }
+    if (!game.completedByUser) {
+      return LOGGER.warn(`Could not remove completed status from game '%s'. It was not marked as completed`, gameName);
+    }
+
+    this.updateParticipantScores();
+    // If removing the "completed" mark made the race not ended anymore, start it up again
+    if(this.phase === "ENDED" && !this.isRaceCompleted()) {
+      this.phase = "ACTIVE";
+      this.updateState("participants", "phase");
+    }
+    else {
+      this.swapGameIfPossible("participants");
+    }
   }
 
   /************************************************************************
@@ -246,7 +295,7 @@ export default class RaceState {
     }
   }
 
-  private scheduledSwapBlock(swapBlockUntilUnix: number) {
+  private startSwapBlockTimer(swapBlockUntilUnix: number) {
     const timeout = Math.max(swapBlockUntilUnix - Date.now(), 0);
     this.swapBlockTimer = setTimeout(() => {
       this.swapBlockTimer = undefined;
