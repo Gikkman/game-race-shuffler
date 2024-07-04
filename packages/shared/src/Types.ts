@@ -11,7 +11,7 @@ export type RaceParticipant = {
   status: "DISCONNECTED"|"CONNECTED"
 }
 
-export type RacePhase = "NEW"|"ACTIVE"|"ENDED"
+export type RacePhase = "NEW"|"ACTIVE"|"PAUSED"|"ENDED";
 
 export type RaceStateOverview = {
   games: RaceGame[],
