@@ -89,7 +89,7 @@ function handleWebhook(req: Request) {
 
   const timestampDelta = Date.now() - Date.parse(timestamp);
   if(timestampDelta < 0 || timestampDelta > 60_000) {
-    LOGGER.warn("Timestamp invalid: %s", timestamp);
+    LOGGER.warn("Timestamp outdated: %s", timestamp);
     return false;
   }
 
