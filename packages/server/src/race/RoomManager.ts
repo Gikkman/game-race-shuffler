@@ -150,6 +150,13 @@ function generateStateUpdateCallback(roomName: string) {
       Server.tipc().send("raceEnded", {roomName, participants});
     }
 
+    // If the only updated field is swapEventData, don't trigger an update
+    // This is because swapEventData isn't persisted to disc, and the only case where
+    // it is the only updated field is when a race is paused, but a swap is triggered anyway
+    if(update.changes.length === 1 && update.changes.includes("swapEventData")) {
+      return;
+    }
+
     const room = rooms.get(roomName);
     if(room) {  // This can't really ever be falsy but I guess you never know
       RoomRepository.update(room.__serialize());
