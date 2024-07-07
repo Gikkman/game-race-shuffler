@@ -1,4 +1,4 @@
-import { CreateRoomRequest, RaceAdminAction, RoomOverview } from "@grs/shared";
+import { CreateRoomRequest, RaceAdminAction, RaceAdminChangeRacePhase, RaceAdminSwapToGame, RoomOverview } from "@grs/shared";
 
 export async function getRoomList(): Promise<string[]> {
   const res = await fetch("/api/room");
@@ -38,41 +38,35 @@ export async function createRoom(data: CreateRoomRequest): Promise<{ adminKey: s
     });
 }
 
-export async function startRace(data: {adminKey: string, roomName: string}): Promise<boolean> {
-  const {adminKey, roomName} = data;
-  const body: RaceAdminAction = {
-    adminKey,
-    roomName,
-    command: {
-      action: "changeRacePhase",
-      phase: "ACTIVE"
-    }
-  };
-  const res = await fetch(`/api/room/${roomName}/admin`, {
+export async function changePhase(data: RaceAdminChangeRacePhase): Promise<boolean> {
+  const res = await fetch(`/api/room/${data.roomName}/admin-set-phase`, {
     method: "POST",
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(data)
   });
   return res.ok;
 }
 
-export async function swapGame(data: {adminKey: string, roomName: string}): Promise<boolean> {
-  const {adminKey, roomName} = data;
-  const body: RaceAdminAction = {
-    adminKey,
-    roomName,
-    command: {
-      action: "swapRandomGame",
-    }
-  };
-  const res = await fetch(`/api/room/${data.roomName}/admin`, {
+export async function swapGame(data: RaceAdminAction): Promise<boolean> {
+  const res = await fetch(`/api/room/${data.roomName}/admin-shuffle-game`, {
     method: "POST",
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(data)
+  });
+  return res.ok;
+}
+
+export async function setGame(data: RaceAdminSwapToGame): Promise<boolean> {
+  const res = await fetch(`/api/room/${data.roomName}/admin-set-game`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
   });
   return res.ok;
 }

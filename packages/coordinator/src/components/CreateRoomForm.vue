@@ -111,10 +111,10 @@ function buildSwapModeConfig(): SwapModeConfig {
 
 <style scoped>
 .wide-input {
-  width: 80%;
+  flex: 1;
 }
 .games {
-  width: 100%;
+  flex: 1;
 }
 .game-title {
   text-align: left;

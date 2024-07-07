@@ -52,6 +52,10 @@ export function swapGame(room: RoomState) {
   room.raceState.adminControl_manualSwapRandom();
 }
 
+export function setGame(room: RoomState, gameName: string) {
+  room.raceState.adminControl_manualSwapToGame(gameName);
+}
+
 export function createRoom(data: CreateRoomRequest) {
   const {roomName} = data;
   const stateUpdateCallback = generateStateUpdateCallback(roomName);

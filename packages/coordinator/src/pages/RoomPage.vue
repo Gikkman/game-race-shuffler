@@ -11,14 +11,14 @@ import RaceFooter from '../components/RaceFooter.vue';
 const roomName = Router.getRoute().params["name"] as string;
 
 const connected = TipcListener.connected;
-const roomState = ref<RoomOverview>();
+const room = ref<RoomOverview>();
 const raceState = ref<RaceStateOverview>();
 const ready = ref(false);
 
 TipcListener.init().then(async () => {
-  ServerApi.getRoom(roomName).then(room => {
-    roomState.value = room;
-    raceState.value = room.raceStateData;
+  ServerApi.getRoom(roomName).then(roomResponse => {
+    room.value = roomResponse;
+    raceState.value = roomResponse.raceStateData;
   })
   .finally(() => {
     ready.value = true;
@@ -26,7 +26,7 @@ TipcListener.init().then(async () => {
 }).finally(() => {
   TipcListener.getClient().addListener("raceStateUpdate", update => {
     if (update.roomName === roomName) {
-      raceState.value = update
+      raceState.value = update;
     }
   });
 })
@@ -43,12 +43,10 @@ TipcListener.init().then(async () => {
       ----------------
     </div>
     <div v-if="ready">
-      <div v-if="raceState && roomState">
+      <div v-if="raceState && room">
         <RaceStateView :raceState />
-        <br>
-        <RaceControls :roomName />
-        <br>
-        <RaceFooter :roomState />
+        <RaceControls :room :raceState />
+        <RaceFooter :room />
       </div>
       <h1 v-else>
         Room not found

@@ -1,7 +1,7 @@
 <script async setup lang="ts">
 import { RoomOverview } from '@grs/shared';
 
-defineProps<{ roomState: RoomOverview }>();
+defineProps<{ room: RoomOverview }>();
 
 function toDateTime(time: number) {
   const date = new Date(time);
@@ -12,9 +12,9 @@ function toDateTime(time: number) {
 
 <template>
   <div class="pane-v footer tiny-text">
-    <p>This room was created at {{ toDateTime(roomState.createdAt) }}</p>
-    <p v-if="roomState.archivedAt">This room was archived at {{ toDateTime(roomState.archivedAt) }}</p>
-    <p v-else>The room will be archived at {{ toDateTime(roomState.liveUntil) }}</p>
+    <p>This room was created at {{ toDateTime(room.createdAt) }}</p>
+    <p v-if="room.archivedAt">This room was archived at {{ toDateTime(room.archivedAt) }}</p>
+    <p v-else>The room will be archived at {{ toDateTime(room.liveUntil) }}</p>
   </div>
 </template>
 
@@ -24,6 +24,6 @@ p {
   margin: 0px;
 }
 .footer {
-  margin-top: 48px;
+  margin-top: 32px;
 }
 </style>

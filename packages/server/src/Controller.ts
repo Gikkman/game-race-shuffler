@@ -1,5 +1,6 @@
-import { Logger, CreateRoomRequest, isCreateRoomRequest, DeleteRoomRequest, RaceAdminAction } from '@grs/shared';
-
+import { Logger, RacePhase, isCreateRoomRequest } from '@grs/shared';
+import type { CreateRoomRequest, DeleteRoomRequest, RaceAdminAction, RaceAdminChangeRacePhase, RaceAdminCompleteGame, RaceAdminSwapToGame, RaceAdminUncompleteGame } from "@grs/shared";
+import type { Response } from 'express';
 import * as Server from './Server.js';
 import * as RoomManager from './race/RoomManager.js';
 
@@ -60,58 +61,81 @@ export async function init() {
   /************************************************************************
    *  Admin Controls for Races
   ************************************************************************/
-  Server.bindPost("/api/room/:name/admin", (req, res) => {
+  Server.bindPost("/api/room/:name/admin-shuffle-game", (req, res) => {
     const body = req.body as RaceAdminAction;
-    LOGGER.info(`Request to admin race %s`, body.roomName);
-
-    if(!body.command || !body.command.action) {
-      return res.send(400).send("Invalid 'command' parameter");
-    }
-
-    const room = RoomManager.roomExists(body.roomName);
+    const room = validateAdminRequest_orReturn400(res, body);
     if(!room) {
-      return res.status(400).send("Room not found");
+      return;
     }
-    if(!RoomManager.hasAdminAccess(room, body.adminKey)) {
-      return res.status(401).send("Invalid admin key");
+    RoomManager.swapGame(room);
+    return res.status(204).send();
+  });
+
+  Server.bindPost("/api/room/:name/admin-set-game", (req, res) => {
+    const body = req.body as RaceAdminSwapToGame;
+    const room = validateAdminRequest_orReturn400(res, body, "gameName");
+    if(!room) {
+      return;
     }
 
-    const roomState = room.getStateSummary();
-    const command = body.command;
-    switch(command.action) {
+    const roomOverview = RoomManager.getRoomOverview(room);
+    if(!roomOverview.raceStateData.games.find(e => e.gameName === body.gameName)) {
+      return res.status(400).send("No such game found in race");
+    }
+    if(roomOverview.raceStateData.currentGame?.gameName === body.gameName) {
+      return res.status(400).send("Can't swap to the game that's already the current game");
+    }
+    RoomManager.setGame(room, body.gameName);
+    return res.status(204).send();
+  });
 
-    case "changeRacePhase": {
-      const currentPhase = roomState.raceStateData.phase;
-      if(!["NEW","ACTIVE","ENDED"].includes(command.phase)) {
-        return res.status(400).send("Unknown phase " + command.phase);
-      }
-      if(currentPhase === command.phase) {
-        return res.status(400).send("Race already in phase " + command.phase);
-      }
-      RoomManager.changeRacePhase(room, command.phase);
-      break;
+  Server.bindPost("/api/room/:name/admin-set-phase", (req, res) => {
+    const body = req.body as RaceAdminChangeRacePhase;
+    const room = validateAdminRequest_orReturn400(res, body, "phase");
+    if(!room) {
+      return;
+    }
+    const phases: RacePhase[] = ["NEW", "ACTIVE", "PAUSED", "ENDED"];
+    if(!phases.includes(body.phase)) {
+      return res.status(400).send("Invalid phase: " + body.phase);
+    }
+    RoomManager.changeRacePhase(room, body.phase);
+    return res.status(204).send();
+  });
+
+  Server.bindPost("/api/room/:name/admin-complete-game", (req, res) => {
+    const body = req.body as RaceAdminCompleteGame;
+    const room = validateAdminRequest_orReturn400(res, body, "gameName", "participantName");
+    if(!room) {
+      return;
     }
 
-    case "swapRandomGame":{
-      RoomManager.swapGame(room);
-      break;
+    const roomOverview = RoomManager.getRoomOverview(room);
+    if(!roomOverview.raceStateData.games.find(e => e.gameName === body.gameName)) {
+      return res.status(400).send("No such game found in race");
+    }
+    if(!roomOverview.raceStateData.participants.find(e => e.userName === body.participantName)) {
+      return res.status(400).send("No such participant found in race");
     }
 
-    case "swapToGame":{
-      break;
+    RoomManager.completeGame(room, body.participantName, body.gameName);
+    return res.status(204).send();
+  });
+
+  Server.bindPost("/api/room/:name/admin-uncomplete-game", (req, res) => {
+    const body = req.body as RaceAdminUncompleteGame;
+    const room = validateAdminRequest_orReturn400(res, body, "gameName");
+    if(!room) {
+      return;
     }
 
-    case "completeGame":{
-      RoomManager.completeGame(room, command.participantName, command.gameName);
-      break;
+    const roomOverview = RoomManager.getRoomOverview(room);
+    if(!roomOverview.raceStateData.games.find(e => e.gameName === body.gameName)) {
+      return res.status(400).send("No such game found in race");
     }
 
-    case "uncompleteGame":{
-      break;
-    }
-
-    }
-    return res.status(204).send("");
+    // TODO
+    return res.status(204).send();
   });
 
   /************************************************************************
@@ -172,4 +196,31 @@ export async function init() {
   });
 
   initialized = true;
+}
+
+/************************************************************************
+*  Admin action handlers
+************************************************************************/
+function validateAdminRequest_orReturn400<T extends RaceAdminAction>(res: Response, body: T, ...extraFields: (keyof T)[]) {
+  LOGGER.info(`Request to admin race %s`, body.roomName);
+
+  if(!hasFields(body, "adminKey", "roomName", ...extraFields)) {
+    res.status(400).send("Invalid request format");
+    return false;
+  }
+
+  const room = RoomManager.roomExists(body.roomName);
+  if(!room) {
+    res.status(400).send("Room not found");
+    return false;
+  }
+  if(!RoomManager.hasAdminAccess(room, body.adminKey)) {
+    res.status(401).send("Invalid admin key");
+    return false;
+  }
+  return room;
+}
+
+function hasFields<T extends object>(body: T, ...fields: (keyof T)[]): body is T {
+  return fields.reduce((acc, curr) => acc && (curr in body) ,true);
 }
