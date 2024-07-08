@@ -6,11 +6,18 @@
 </template>
 
 <style>
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
 .pane-v {
   display: flex;
   flex-direction: column;
-  width: 100%;
   gap: 8px;
+  flex: 1;
 }
 
 .pane-h {
@@ -23,14 +30,5 @@
 
 .tiny-text {
   font-size: 13px;
-}
-
-input {
-  height: 25px;
-}
-
-h3 {
-  margin-block-start: 1em;
-  margin-block-end: 0.3em;
 }
 </style>

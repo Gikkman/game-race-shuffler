@@ -1,9 +1,10 @@
 <script async setup lang="ts">
 import { ref } from "vue";
-import * as ServerApi from "../scripts/ServerApi";
 import { getAdminKey } from "../scripts/KeyValueStore";
 import { RaceStateOverview, RoomOverview } from "@grs/shared";
 import SwapGameControls from "./race-controls/SwapGameControls.vue";
+import RacePhaseControls from "./race-controls/RacePhaseControls.vue";
+import GameCompleteControls from "./race-controls/GameCompleteControls.vue";
 
 const props = defineProps<{ room: RoomOverview, raceState: RaceStateOverview }>();
 const adminKey = ref( getAdminKey(props.room.roomName) );
@@ -13,29 +14,16 @@ function copyAdminKey() {
   if(adminKey.value)
     navigator.clipboard.writeText(adminKey.value)
 }
-
-function startRace() {
-  if(!adminKey.value) return;
-
-  if(confirm("Really start race?")) {
-    ServerApi.changePhase({adminKey: adminKey.value, roomName: props.room.roomName, phase: "ACTIVE"})
-  }
-}
-function pauseRace() {
-  if(!adminKey.value) return;
-
-  if(confirm("Really pause race?")) {
-    ServerApi.changePhase({adminKey: adminKey.value, roomName: props.room.roomName, phase: "PAUSED"})
-  }
-}
 </script>
 
 <template>
   <div class="pane-v control-pane">
+    <RacePhaseControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></RacePhaseControls>
     <details>
       <summary>Admin Controls</summary>
       <div class="pane-v">
-
+        <SwapGameControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></SwapGameControls>
+        <GameCompleteControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></GameCompleteControls>
         <div class="control-pane">
           <p class="admin-key">Admin Key</p>
           <div class="pane-h">
@@ -43,14 +31,6 @@ function pauseRace() {
             <button :disabled="!adminKey" @click="copyAdminKey">COPY</button>
           </div>
         </div>
-
-        <div class="pane-h control-pane">
-          <button :disabled="!adminKey" @click="startRace" v-if="raceState.phase!=='ACTIVE'" >Start Race</button>
-          <button :disabled="!adminKey" @click="pauseRace" v-else                            >Pause Race</button>
-        </div>
-
-        <SwapGameControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></SwapGameControls>
-
       </div>
     </details>
   </div>
@@ -64,14 +44,14 @@ function pauseRace() {
   margin: 0px;
 }
 .control-pane {
-  margin: 8px 0px 0px;
-  min-height: 40px;
+  margin: 12px 0px 0px;
 }
 
 summary {
   font-weight: bold;
 }
 details > summary {
+  padding: 16px 0px 8px;
   list-style: none;
 }
 summary::after {
@@ -81,5 +61,9 @@ summary::after {
 details[open] summary:after {
   content: " ▼";
   padding: 8px;
+}
+details > div {
+  border-style: dotted;
+  padding-bottom: 8px;
 }
 </style>

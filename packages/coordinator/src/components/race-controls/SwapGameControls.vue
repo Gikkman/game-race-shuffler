@@ -50,12 +50,13 @@ function setGame() {
 </script>
 
 <template>
-<div class="pane-h control-pane" :disabled="!adminKey">
-  <div v-if="isRaceActive">
+<div class="pane-v control-pane" :disabled="!adminKey">
+  <div>Game Controls</div>
+  <div class="swap-game-select"  v-if="isRaceActive">
     <button @click="swapGame">Swap Game</button>
   </div>
-  <div v-else>
-    <select class="swap-game-select" v-model="selectedGame" @change="setGame">
+  <div class="swap-game-select"  v-else>
+    <select v-model="selectedGame" @change="setGame">
       <option v-for="game in possibleGameSwaps" :value="game">
         {{ game.gameName }}
       </option>
@@ -67,5 +68,8 @@ function setGame() {
 <style scoped>
 .swap-game-select {
   flex: 1;
+}
+select {
+  width: 90%;
 }
 </style>
