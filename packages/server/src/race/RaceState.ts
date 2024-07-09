@@ -115,14 +115,7 @@ export default class RaceState {
 
     game.completedByUser = participant.userName;
 
-    this.updateParticipantScores();
-    if(this.isRaceCompleted()) {
-      this.phase = "ENDED";
-      this.updateState("participants", "phase");
-    }
-    else {
-      this.swapGameIfPossible("participants");
-    }
+    this.doPostGameCompletionActions();
   }
 
   swapGameIfPossible(...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
@@ -156,24 +149,6 @@ export default class RaceState {
       swapMinCooldown: this.swapMinCooldown,
       swapMaxCooldown: this.swapMaxCooldown,
     };
-  }
-
-  swapModeBind(eventData: string) {
-    LOGGER.info("Swap event received from SwapMode binding");
-
-    this.swapEventData.push(eventData);
-    if(this.swapEventData.length > 5) {
-      this.swapEventData = this.swapEventData.slice(1);
-    }
-
-    // If the race is active, trigger a swap
-    // Otherwise, just send a state update
-    if(this.phase==="ACTIVE") {
-      this.swapGameIfPossible("swapEventData");
-    }
-    else {
-      this.updateState("swapEventData");
-    }
   }
 
   cleanup() {
@@ -232,7 +207,18 @@ export default class RaceState {
 
   adminControl_markGameAsCompleted(gameName: string, participantName: string) {
     LOGGER.debug("Admin request to game %s as completed by participant %s", gameName, participantName);
-    this.completeGame(gameName, participantName);
+    const game = this.games.find(e => e.gameName === gameName);
+    if (!game) {
+      return LOGGER.warn(`Could not mark game '%s' as completed. No such game in the race`, gameName);
+    }
+    const participant = this.participants.find(e => e.userName === participantName);
+    if (!participant) {
+      return LOGGER.warn(`Could not mark game as completed. No user named '%s' registed in the race`, participantName);
+    }
+
+    game.completedByUser = participant.userName;
+
+    this.doPostGameCompletionActions();
   }
 
   adminControl_markGameAsUncompleted(gameName: string) {
@@ -277,6 +263,17 @@ export default class RaceState {
     return false;
   }
 
+  private doPostGameCompletionActions() {
+    this.updateParticipantScores();
+    if(this.isRaceCompleted()) {
+      this.phase = "ENDED";
+      this.updateState("participants", "phase");
+    }
+    else {
+      this.swapGameIfPossible("participants");
+    }
+  }
+
   private updateParticipantScores() {
     const participantScores = {} as Record<string, number>;
     const mostScore = { name: [] as string[], score: 0 as number };
@@ -314,12 +311,29 @@ export default class RaceState {
     }, timeout);
   }
 
-
   private generateSwapBlockUntil() {
     const min = Math.ceil(this.swapMinCooldown);
     const max = Math.floor(this.swapMaxCooldown);
     const delayLenght = (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
     return Date.now() + delayLenght;
+  }
+
+  private swapModeBind(eventData: string) {
+    LOGGER.info("Swap event received from SwapMode binding");
+
+    this.swapEventData.push(eventData);
+    if(this.swapEventData.length > 5) {
+      this.swapEventData = this.swapEventData.slice(1);
+    }
+
+    // If the race is active, trigger a swap
+    // Otherwise, just send a state update
+    if(this.phase==="ACTIVE") {
+      this.swapGameIfPossible("swapEventData");
+    }
+    else {
+      this.updateState("swapEventData");
+    }
   }
 }
 

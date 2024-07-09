@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { RaceGame, RaceStateOverview } from "@grs/shared";
 import { computed, ref, watch } from "vue";
+import { RaceGame, RaceStateOverview } from "@grs/shared";
+import * as ServerApi from '../../scripts/ServerApi';
 
 const NOT_COMPLETED_STRING = "- Not Completed -";
 const props = defineProps<{ raceState: RaceStateOverview, roomName: string, adminKey?: string }>();
@@ -23,7 +24,13 @@ function getCompletedBy(game: RaceGame) {
 }
 
 function onChangeCompletedBy(game: RaceGame, user: string) {
-  console.log(user)
+  if(!props.adminKey) return;
+  if(user !== NOT_COMPLETED_STRING) {
+    ServerApi.completeGame({adminKey: props.adminKey, roomName: props.roomName, gameName: game.gameName, participantName: user})
+  }
+  else {
+    ServerApi.uncompleteGame({adminKey: props.adminKey, roomName: props.roomName, gameName: game.gameName})
+  }
 }
 </script>
 

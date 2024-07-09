@@ -67,7 +67,7 @@ export async function init() {
     if(!room) {
       return;
     }
-    RoomManager.swapGame(room);
+    RoomManager.adminControl_manualSwapRandom(room);
     return res.status(204).send();
   });
 
@@ -85,7 +85,7 @@ export async function init() {
     if(roomOverview.raceStateData.currentGame?.gameName === body.gameName) {
       return res.status(400).send("Can't swap to the game that's already the current game");
     }
-    RoomManager.setGame(room, body.gameName);
+    RoomManager.adminControl_manualSwapToGame(room, body.gameName);
     return res.status(204).send();
   });
 
@@ -99,7 +99,7 @@ export async function init() {
     if(!phases.includes(body.phase)) {
       return res.status(400).send("Invalid phase: " + body.phase);
     }
-    RoomManager.changeRacePhase(room, body.phase);
+    RoomManager.adminControl_changePhase(room, body.phase);
     return res.status(204).send();
   });
 
@@ -118,7 +118,7 @@ export async function init() {
       return res.status(400).send("No such participant found in race");
     }
 
-    RoomManager.completeGame(room, body.participantName, body.gameName);
+    RoomManager.adminControl_markGameAsCompleted(room, body.participantName, body.gameName);
     return res.status(204).send();
   });
 
@@ -134,7 +134,7 @@ export async function init() {
       return res.status(400).send("No such game found in race");
     }
 
-    // TODO
+    RoomManager.adminControl_markGameAsUncompleted(room, body.gameName);
     return res.status(204).send();
   });
 

@@ -43,19 +43,6 @@ export async function init() {
 /************************************************************************
 *  Exported function
 ************************************************************************/
-
-export function changeRacePhase(room: RoomState, phase: RacePhase) {
-  room.raceState.adminControl_changePhase(phase);
-}
-
-export function swapGame(room: RoomState) {
-  room.raceState.adminControl_manualSwapRandom();
-}
-
-export function setGame(room: RoomState, gameName: string) {
-  room.raceState.adminControl_manualSwapToGame(gameName);
-}
-
 export function createRoom(data: CreateRoomRequest) {
   const {roomName} = data;
   const stateUpdateCallback = generateStateUpdateCallback(roomName);
@@ -132,6 +119,34 @@ export function hasUserAccess(room: RoomState, userName: string, userKey: string
 export function getGameNameForRace(room: RoomState, gameLogicalName: string) {
   return room.logicalNameToGameName[gameLogicalName];
 }
+
+/************************************************************************
+*  Admin functions
+************************************************************************/
+
+export function adminControl_changePhase(room: RoomState, phase: RacePhase) {
+  room.raceState.adminControl_changePhase(phase);
+}
+
+export function adminControl_manualSwapRandom(room: RoomState) {
+  room.raceState.adminControl_manualSwapRandom();
+}
+
+export function adminControl_manualSwapToGame(room: RoomState, gameName: string) {
+  room.raceState.adminControl_manualSwapToGame(gameName);
+}
+
+export function adminControl_markGameAsCompleted(room: RoomState, gameName: string, participantName: string) {
+  room.raceState.adminControl_markGameAsCompleted(gameName, participantName);
+}
+
+export function adminControl_markGameAsUncompleted(room: RoomState, gameName: string) {
+  room.raceState.adminControl_markGameAsUncompleted(gameName);
+}
+
+/************************************************************************
+*  Internal functions
+************************************************************************/
 
 function generateUserKey(userName: string): string {
   const sha = createHash('sha1');
