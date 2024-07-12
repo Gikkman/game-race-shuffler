@@ -115,7 +115,7 @@ export default class RaceState {
 
     game.completedByUser = participant.userName;
 
-    this.doPostGameCompletionActions();
+    this.doPostGameCompletionActions(game);
   }
 
   swapGameIfPossible(...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
@@ -128,13 +128,16 @@ export default class RaceState {
     const alternatives = this.games.filter(game => game.completedByUser === undefined).filter(game => game.logicalName !== this.currentGame?.logicalName);
     const nextGame = alternatives[getRandomInt(alternatives.length)];
     if(!nextGame) {
-      return LOGGER.info("Could not swap game. No more games available");
+      LOGGER.debug("Could not swap game. No more games available");
     }
-    this.currentGame = nextGame;
+    else {
+      this.currentGame = nextGame;
+      additionalStatesToSignal.push("currentGame");
+    }
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
     this.startSwapBlockTimer(this.swapBlockedUntil);
-    this.updateState(...additionalStatesToSignal, "currentGame", "swapBlockedUntil");
+    this.updateState(...additionalStatesToSignal, "swapBlockedUntil");
   }
 
   __serialize(): RaceStateData {
@@ -152,7 +155,9 @@ export default class RaceState {
   }
 
   cleanup() {
+    LOGGER.debug("Clear timeout of 'swapBlockTimer'");
     clearTimeout(this.swapBlockTimer);
+    LOGGER.debug("Call cleanup on swapMode");
     this.swapMode.cleanup();
   }
 
@@ -218,7 +223,7 @@ export default class RaceState {
 
     game.completedByUser = participant.userName;
 
-    this.doPostGameCompletionActions();
+    this.doPostGameCompletionActions(game);
   }
 
   adminControl_markGameAsUncompleted(gameName: string) {
@@ -230,15 +235,18 @@ export default class RaceState {
     if (!game.completedByUser) {
       return LOGGER.warn(`Could not remove completed status from game '%s'. It was not marked as completed`, gameName);
     }
+    delete game.completedByUser;
 
     this.updateParticipantScores();
+
     // If removing the "completed" mark made the race not ended anymore, start it up again
     if(this.phase === "ENDED" && !this.isRaceCompleted()) {
       this.phase = "ACTIVE";
-      this.updateState("participants", "phase");
+      this.swapGameIfPossible("participants", "phase");
     }
+    // Otherwise, just push a state update
     else {
-      this.swapGameIfPossible("participants");
+      this.updateState("participants", "games");
     }
   }
 
@@ -256,22 +264,35 @@ export default class RaceState {
   private isRaceCompleted(): boolean {
     const gameCount = this.games.length;
     const completedCount = this.games.reduce((acc, curr) => acc += (curr.completedByUser ? 1 : 0), 0);
-
     if (completedCount === gameCount) {
       return true;
     }
     return false;
   }
 
-  private doPostGameCompletionActions() {
+  private doPostGameCompletionActions(completedGame: RaceGame) {
     this.updateParticipantScores();
+    // If the last game was marked as completed, end the race
     if(this.isRaceCompleted()) {
-      this.phase = "ENDED";
-      this.updateState("participants", "phase");
+      this.doRaceCompletedActions();
     }
+    // If the current game was marked as completed, swap game
+    else if(completedGame === this.currentGame) {
+      this.swapGameIfPossible("participants", "games");
+    }
+    // Otherwise, just push an update about the completion and score
     else {
-      this.swapGameIfPossible("participants");
+      this.updateState("participants", "games");
     }
+  }
+
+  private doRaceCompletedActions() {
+    this.phase = "ENDED";
+    this.swapQueueSize = 0;
+    this.swapBlockedUntil = 0;
+    clearTimeout(this.swapBlockTimer);
+    this.swapBlockTimer = undefined;
+    this.updateState("phase", "swapBlockedUntil", "participants");
   }
 
   private updateParticipantScores() {

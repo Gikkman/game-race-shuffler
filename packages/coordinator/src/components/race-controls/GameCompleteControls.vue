@@ -52,12 +52,6 @@ function onChangeCompletedBy(game: RaceGame, user: string) {
 </template>
 
 <style scoped>
-table {
-  width: 100%;
-}
-table > tr > * {
-  padding: 2px 2px;
-}
 table > tr > * {
   text-align: left;
 }

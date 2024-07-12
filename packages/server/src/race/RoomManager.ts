@@ -1,14 +1,15 @@
-import { randomUUID, createHash } from "crypto";
-import { CreateRoomRequest, FunctionUtils, RacePhase, RaceStateUpdate, RoomOverview } from '@grs/shared';
+import { randomUUID, createHash, randomBytes } from "crypto";
+import { CreateRoomRequest, FunctionUtils, Logger, RacePhase, RaceStateUpdate, RoomOverview } from '@grs/shared';
 import * as Server from '../Server.js';
 import RoomState from "./RoomState.js";
 import RoomRepository from "./RoomRepository.js";
-import InternalMessages from "../InternalMessages.js";
+import RoomArchive from "./RoomArchive.js";
 
 
 /************************************************************************
 *  Setup stuff
 ************************************************************************/
+const LOGGER = Logger.getLogger("RoomManager");
 const rooms = new Map<string, RoomState>();
 let initialized = false;
 
@@ -22,18 +23,25 @@ export async function init() {
     rooms.set(room.roomName, room);
   });
 
+  /*
+  TODO: Re-enable the automated room archival after ESA
+
   InternalMessages().addListener("cleanupCron", () => {
     const now = Date.now();
     for(const room of rooms.values()) {
       const state = room.getStateSummary();
       if(now > state.liveUntil) {
-        // Archive old room
+        LOGGER.info("Archiving room %s (%s) due to age", room.roomId, room.roomName);
+        deleteRoom(room);
       }
     }
   });
+  */
 
   process.on("SIGINT", () => {
+    LOGGER.info("Calling cleanup on each room");
     for(const room of rooms.values()) {
+      LOGGER.info("Calling cleanup on room %s", room.roomName);
       room.raceState.cleanup();
     }
   });
@@ -47,7 +55,8 @@ export function createRoom(data: CreateRoomRequest) {
   const {roomName} = data;
   const stateUpdateCallback = generateStateUpdateCallback(roomName);
   const adminKey = randomUUID();
-  const roomState = new RoomState({...data, adminKey}, stateUpdateCallback);
+  const {saltedRoomKey, roomKeySalt} = generateRoomKey(data);
+  const roomState = new RoomState({...data, saltedRoomKey, roomKeySalt, adminKey}, stateUpdateCallback);
 
   rooms.set(roomName, roomState);
   RoomRepository.create(roomState.__serialize());
@@ -58,7 +67,9 @@ export function createRoom(data: CreateRoomRequest) {
 export function deleteRoom(room: RoomState) {
   rooms.delete(room.roomId);
   room.raceState.cleanup();
+  RoomArchive.create(room.__serialize());
   RoomRepository.remove(room.roomId);
+  rooms.delete(room.roomName);
 }
 
 export function roomNameInUse(roomName: string) {
@@ -109,7 +120,8 @@ export function hasAdminAccess(room: RoomState, adminKey: string) {
 }
 
 export function hasRoomAccess(room: RoomState, roomKey: string) {
-  return room.roomKey === roomKey;
+  const saltedRoomKey = hashRoomKey(roomKey, room.roomKeySalt);
+  return room.saltedRoomKey === saltedRoomKey;
 }
 
 export function hasUserAccess(room: RoomState, userName: string, userKey: string) {
@@ -149,9 +161,18 @@ export function adminControl_markGameAsUncompleted(room: RoomState, gameName: st
 ************************************************************************/
 
 function generateUserKey(userName: string): string {
-  const sha = createHash('sha1');
-  const uuid = randomUUID();
-  return sha.update(userName+uuid).digest('hex');
+  const sha = createHash('sha256');
+  return sha.update(userName+generateRandomString(20)).digest('hex');
+}
+
+function generateRoomKey(data: CreateRoomRequest) {
+  const roomKeySalt = generateRandomString(8);
+  const saltedRoomKey = hashRoomKey(data.roomKey, roomKeySalt);
+  return {saltedRoomKey, roomKeySalt};
+}
+
+function hashRoomKey(roomKey: string, roomKeySalt: string) {
+  return createHash('sha256').update(roomKeySalt+roomKey).digest('hex');
 }
 
 function generateStateUpdateCallback(roomName: string) {
@@ -181,4 +202,8 @@ function generateStateUpdateCallback(roomName: string) {
       RoomRepository.update(room.__serialize());
     }
   };
+}
+
+function generateRandomString(length:number) {
+  return randomBytes(length/2+1).toString('base64url').slice(0,length);
 }

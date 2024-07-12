@@ -9,14 +9,16 @@ export type RoomStateData = {
   _id: string,
   createdAt: number,
   roomName: string,
-  roomKey: string,
+  saltedRoomKey: string,
+  roomKeySalt: string,
   adminKey: string,
   userKeys: Record<string, string>,
 }
 
 type RoomStateArgs = {
   roomName: string,
-  roomKey: string,
+  saltedRoomKey: string,
+  roomKeySalt: string,
   adminKey: string,
   games: string[],
   swapMinCooldown: number,
@@ -29,7 +31,8 @@ export default class RoomState {
   readonly roomId: string;
   readonly createdAt: number;
   readonly roomName: string;
-  readonly roomKey: string;
+  readonly saltedRoomKey: string;
+  readonly roomKeySalt: string;
   readonly adminKey: string;
   readonly userKeys: Record<string, string>;
   readonly gameNameToLogicalName: Record<string, string>;
@@ -41,7 +44,8 @@ export default class RoomState {
       this.roomId = args._id;
       this.createdAt = args.createdAt;
       this.roomName = args.roomName;
-      this.roomKey = args.roomKey;
+      this.saltedRoomKey = args.saltedRoomKey;
+      this.roomKeySalt = args.roomKeySalt;
       this.adminKey = args.adminKey;
       this.userKeys = args.userKeys;
       this.gameNameToLogicalName = toRecord(args.raceStateData.games, "gameName", "logicalName");
@@ -52,7 +56,8 @@ export default class RoomState {
       this.roomId = randomUUID();
       this.createdAt = Date.now();
       this.roomName = args.roomName;
-      this.roomKey = args.roomKey;
+      this.saltedRoomKey = args.saltedRoomKey;
+      this.roomKeySalt = args.roomKeySalt;
       this.adminKey = args.adminKey;
       this.userKeys = {};
 
@@ -82,7 +87,8 @@ export default class RoomState {
       _id: this.roomId,
       createdAt: this.createdAt,
       roomName: this.roomName,
-      roomKey: this.roomKey,
+      saltedRoomKey: this.saltedRoomKey,
+      roomKeySalt: this.roomKeySalt,
       adminKey: this.adminKey,
       userKeys: this.userKeys,
     };

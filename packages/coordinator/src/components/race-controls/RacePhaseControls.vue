@@ -1,8 +1,13 @@
 <script async setup lang="ts">
+import { computed } from "vue";
 import * as ServerApi from "../../scripts/ServerApi";
 import { RaceStateOverview } from "@grs/shared";
 
 const props = defineProps<{ raceState: RaceStateOverview, roomName: string, adminKey?: string }>();
+
+const pauseRaceButton = computed(() => props.raceState.phase === "ACTIVE")
+const startRaceButton = computed(() => props.raceState.phase === "PAUSED"
+                                    || props.raceState.phase === "NEW")
 
 function startRace() {
   if(!props.adminKey) return;
@@ -22,8 +27,9 @@ function pauseRace() {
 
 <template>
 <div class="pane-h control-pane" style="flex: 1;">
-  <button :disabled="!adminKey" @click="startRace" v-if="raceState.phase!=='ACTIVE'" >Start Race</button>
-  <button :disabled="!adminKey" @click="pauseRace" v-else                            >Pause Race</button>
+  <button :disabled="!adminKey" @click="startRace" v-if="startRaceButton"     >Start Race</button>
+  <button :disabled="!adminKey" @click="pauseRace" v-else-if="pauseRaceButton">Pause Race</button>
+  <button :disabled="true"      @click="pauseRace" v-else                     >Ended</button>
 </div>
 </template>
 

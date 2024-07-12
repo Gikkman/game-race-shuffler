@@ -118,7 +118,7 @@ export async function init() {
       return res.status(400).send("No such participant found in race");
     }
 
-    RoomManager.adminControl_markGameAsCompleted(room, body.participantName, body.gameName);
+    RoomManager.adminControl_markGameAsCompleted(room, body.gameName, body.participantName);
     return res.status(204).send();
   });
 

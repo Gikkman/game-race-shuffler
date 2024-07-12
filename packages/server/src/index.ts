@@ -9,6 +9,7 @@ import * as Controller from './Controller.js';
 import * as InternalMessages from './InternalMessages.js';
 import * as TiltifyWebhook from './webhooks/TiltifyWebhook.js';
 import * as RoomManager from './race/RoomManager.js';
+import RoomArchive from './race/RoomArchive.js';
 import RoomRepository from './race/RoomRepository.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,7 @@ await Controller.init();
 await InternalMessages.init();
 await TiltifyWebhook.init();
 await RoomRepository.init();
+await RoomArchive.init();
 await RoomManager.init();
 
 // This call should be called after all other modules are initialized
@@ -32,6 +34,6 @@ const cleanupCron = setInterval(() => {
   InternalMessages.default().send("cleanupCron");
 }, 2*60*1000); //Every two minutes
 process.on("SIGINT", () => {
-  console.log("Cleanup");
+  console.log("Stopping job 'cleanupCron'");
   clearInterval(cleanupCron);
 });

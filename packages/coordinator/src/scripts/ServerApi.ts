@@ -1,4 +1,4 @@
-import { CreateRoomRequest, RaceAdminAction, RaceAdminChangeRacePhase, RaceAdminCompleteGame, RaceAdminSwapToGame, RaceAdminUncompleteGame, RoomOverview } from "@grs/shared";
+import { CreateRoomRequest, DeleteRoomRequest, RaceAdminAction, RaceAdminChangeRacePhase, RaceAdminCompleteGame, RaceAdminSwapToGame, RaceAdminUncompleteGame, RoomOverview } from "@grs/shared";
 
 export async function getRoomList(): Promise<string[]> {
   const res = await fetch("/api/room");
@@ -85,6 +85,17 @@ export async function completeGame(data: RaceAdminCompleteGame): Promise<boolean
 export async function uncompleteGame(data: RaceAdminUncompleteGame): Promise<boolean> {
   const res = await fetch(`/api/room/${data.roomName}/admin-uncomplete-game`, {
     method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  return res.ok;
+}
+
+export async function archiveRoom(data: DeleteRoomRequest): Promise<boolean> {
+  const res = await fetch(`/api/room/${data.roomName}`, {
+    method: "DELETE",
     headers: {
       'Content-Type': 'application/json'
     },

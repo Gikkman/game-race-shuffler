@@ -1,5 +1,5 @@
 <script async setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import * as ServerApi from "../../scripts/ServerApi";
 import { RaceStateOverview } from "@grs/shared";
 
@@ -20,6 +20,7 @@ const possibleGameSwaps = computed(() => {
 
 // Create a ref for the current game
 const selectedGame = ref(props.raceState.currentGame);
+watch(currentGame, () => selectedGame.value = currentGame.value);
 
 // Behavior functions
 function swapGame() {

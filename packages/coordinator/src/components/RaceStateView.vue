@@ -12,6 +12,9 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 <template>
   <div class="pane-v">
     <div class="pane-h">
+      <div v-for="msg in raceState.swapEventData" class="msg">{{ msg }}</div>
+    </div>
+    <div class="pane-h">
       Race phase: <span class="phase-text">{{ raceState.phase }}</span>
     </div>
     <div class="pane-h">
@@ -46,7 +49,7 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
         </div>
       </div>
     </div>
-    <div>
+    <div class="pane-v">
       <h3>Participants</h3>
       <table>
         <tr>
@@ -61,7 +64,7 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
         </tr>
       </table>
     </div>
-    <div>
+    <div class="pane-v">
       <h3>Games</h3>
       <table class="game-table">
         <tr>
@@ -91,16 +94,14 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
   font-weight: bold;
 }
 
-table {
-  width: 100%;
-
-}
-
-table > tr > * {
-  padding: 2px 10px;
-}
-
 .game-table > tr > * {
   text-align: left;
+}
+
+.msg {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
 }
 </style>

@@ -8,6 +8,7 @@
 <style>
 #app {
   max-width: 1280px;
+  min-width: 600px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;

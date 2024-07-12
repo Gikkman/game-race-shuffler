@@ -76,6 +76,9 @@ export function isCreateRoomRequest(obj: unknown): obj is CreateRoomRequest {
     if(!regex.test(createRoomObj.roomName)) {
       throw "Invalid 'roomName' format. Only letters, number or underscores allowed";
     }
+    if(createRoomObj.roomName.length > 60) {
+      throw "Invalid 'roomName' length. At most 60 characters allowed.";
+    }
     if(!Array.isArray(createRoomObj.games)) {
       throw "Invalid 'games' format. Should be an array";
     }

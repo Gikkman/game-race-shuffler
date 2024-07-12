@@ -13,3 +13,7 @@ export const router = createRouter({
 export function getRoute() {
   return useRoute();
 }
+
+export function navigate(path: string) {
+  router.push(path);
+}
