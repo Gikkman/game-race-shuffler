@@ -36,7 +36,7 @@ function onChangeCompletedBy(game: RaceGame, user: string) {
 
 <template>
 <div class="pane-v control-pane">
-  <div>Game Completed By</div>
+  <div class="control-heading">Game Completed By</div>
   <table>
     <tr><th>Title</th><th>Completed By</th></tr>
     <tr v-for="(game, index) in props.raceState.games" :key="game.logicalName">

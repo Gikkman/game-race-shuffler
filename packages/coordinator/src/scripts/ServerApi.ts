@@ -39,67 +39,63 @@ export async function createRoom(data: CreateRoomRequest): Promise<{ adminKey: s
 }
 
 export async function changePhase(data: RaceAdminChangeRacePhase): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}/admin-set-phase`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return res.ok;
+  return apiCall("/admin-set-phase", "POST", data);
 }
 
 export async function swapGame(data: RaceAdminAction): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}/admin-shuffle-game`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return res.ok;
+  return apiCall("/admin-shuffle-game", "POST", data);
 }
 
 export async function setGame(data: RaceAdminSwapToGame): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}/admin-set-game`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return res.ok;
+  return apiCall("/admin-set-game", "POST", data);
 }
 
 export async function completeGame(data: RaceAdminCompleteGame): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}/admin-complete-game`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return res.ok;
+  return apiCall("/admin-complete-game", "POST", data);
 }
 
 export async function uncompleteGame(data: RaceAdminUncompleteGame): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}/admin-uncomplete-game`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return res.ok;
+  return apiCall("/admin-uncomplete-game", "POST", data);
 }
 
 export async function archiveRoom(data: DeleteRoomRequest): Promise<boolean> {
-  const res = await fetch(`/api/room/${data.roomName}`, {
-    method: "DELETE",
+  return apiCall("/", "DELETE", data);
+}
+
+export async function clearSwapQueue(data: RaceAdminAction): Promise<boolean> {
+  return apiCall("/admin-clear-swap-queue", "POST", data);
+}
+
+export async function clearBlockTimer(data: RaceAdminAction): Promise<boolean> {
+  return apiCall("/admin-clear-block-timer", "POST", data);
+}
+
+export async function setBlockTimer(data: RaceAdminAction): Promise<boolean> {
+  return apiCall("/admin-set-block-timer", "POST", data);
+}
+
+async function apiCall<T extends RaceAdminAction>(apiPath: string, method: "GET"|"POST"|"DELETE", data: T): Promise<boolean> {
+  const reqPath = `/api/room/${data.roomName}${apiPath}`;
+  return fetch(reqPath, {
+    method: method,
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(data)
-  });
-  return res.ok;
+  })
+    .then(res => {
+      if(res.ok) {
+        return true;
+      }
+      else {
+        console.warn(`Call to ${reqPath} returned status ${res.status} and message:`);
+        console.warn(res.body);
+        return false;
+      }
+    })
+    .catch(ex => {
+      console.warn(`Call to ${reqPath} failed:`);
+      console.warn(ex);
+      return false;
+    });
 }

@@ -25,8 +25,8 @@ TipcListener.init().then(async () => {
   })
 }).finally(() => {
   TipcListener.getClient().addListener("raceStateUpdate", update => {
-    console.log(update)
     if (update.roomName === roomName) {
+      console.log(update.changes)
       raceState.value = update;
     }
   });
@@ -56,7 +56,7 @@ TipcListener.init().then(async () => {
   </div>
 </template>
 
-<style scoped>
+<style>
 .main {
   display: flex;
   flex-direction: column;
@@ -66,5 +66,11 @@ TipcListener.init().then(async () => {
 }
 .main > div {
   width: 100%;
+}
+.control-pane {
+  margin: 12px 0px 0px;
+}
+.control-heading {
+  text-decoration-line: underline;
 }
 </style>

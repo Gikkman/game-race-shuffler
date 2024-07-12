@@ -156,6 +156,18 @@ export function adminControl_markGameAsUncompleted(room: RoomState, gameName: st
   room.raceState.adminControl_markGameAsUncompleted(gameName);
 }
 
+export function adminControl_clearSwapQueue(room: RoomState) {
+  room.raceState.adminControl_clearSwapQueue();
+}
+
+export function adminControl_clearBlockTimer(room: RoomState) {
+  room.raceState.adminControl_clearBlockTimer();
+}
+
+export function adminControl_setBlockTimer(room: RoomState) {
+  room.raceState.adminControl_setBlockTimer();
+}
+
 /************************************************************************
 *  Internal functions
 ************************************************************************/

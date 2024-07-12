@@ -138,6 +138,36 @@ export async function init() {
     return res.status(204).send();
   });
 
+  Server.bindPost("/api/room/:name/admin-clear-swap-queue", (req, res) => {
+    const body = req.body as RaceAdminAction;
+    const room = validateAdminRequest_orReturn400(res, body);
+    if(!room) {
+      return;
+    }
+    RoomManager.adminControl_clearSwapQueue(room);
+    return res.status(204).send();
+  });
+
+  Server.bindPost("/api/room/:name/admin-clear-block-timer", (req, res) => {
+    const body = req.body as RaceAdminAction;
+    const room = validateAdminRequest_orReturn400(res, body);
+    if(!room) {
+      return;
+    }
+    RoomManager.adminControl_clearBlockTimer(room);
+    return res.status(204).send();
+  });
+
+  Server.bindPost("/api/room/:name/admin-set-block-timer", (req, res) => {
+    const body = req.body as RaceAdminAction;
+    const room = validateAdminRequest_orReturn400(res, body);
+    if(!room) {
+      return;
+    }
+    RoomManager.adminControl_setBlockTimer(room);
+    return res.status(204).send();
+  });
+
   /************************************************************************
   *  TIPC handlers
   ************************************************************************/

@@ -52,7 +52,7 @@ function setGame() {
 
 <template>
 <div class="pane-v control-pane" :disabled="!adminKey">
-  <div>Game Controls</div>
+  <div class="control-heading">Game Controls</div>
   <div class="swap-game-select"  v-if="isRaceActive">
     <button @click="swapGame">Swap Game</button>
   </div>

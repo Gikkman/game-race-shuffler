@@ -250,6 +250,30 @@ export default class RaceState {
     }
   }
 
+  adminControl_clearSwapQueue() {
+    LOGGER.debug("Admin request to set swapQueueSize to 0");
+    this.swapQueueSize = 0;
+    this.updateState("swapQueueSize");
+  }
+
+  adminControl_clearBlockTimer() {
+    LOGGER.debug("Admin request to clear swapBlockTimer");
+    clearTimeout(this.swapBlockTimer);
+    this.swapBlockTimer = undefined;
+    this.swapBlockedUntil = 0;
+    this.updateState("swapBlockedUntil");
+  }
+
+  adminControl_setBlockTimer() {
+    LOGGER.debug("Admin request to set a (new) swapBlockTimer");
+    // If we don't clear the previous timer that might be running, we'll
+    // get several timer resolves after a while
+    clearTimeout(this.swapBlockTimer);
+    this.swapBlockedUntil = this.generateSwapBlockUntil();
+    this.startSwapBlockTimer(this.swapBlockedUntil);
+    this.updateState("swapBlockedUntil");
+  }
+
   /************************************************************************
   *  Private methods
   ************************************************************************/
@@ -335,8 +359,8 @@ export default class RaceState {
   private generateSwapBlockUntil() {
     const min = Math.ceil(this.swapMinCooldown);
     const max = Math.floor(this.swapMaxCooldown);
-    const delayLenght = (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
-    return Date.now() + delayLenght;
+    const delayLength = (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
+    return Date.now() + delayLength;
   }
 
   private swapModeBind(eventData: string) {

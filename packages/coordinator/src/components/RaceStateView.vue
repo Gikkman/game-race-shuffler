@@ -11,9 +11,9 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 
 <template>
   <div class="pane-v">
-    <div class="pane-h">
-      <div v-for="msg in raceState.swapEventData" class="msg">{{ msg }}</div>
-    </div>
+    <TransitionGroup name="list" tag="div" class="pane-h">
+      <div v-for="msg in raceState.swapEventData" class="msg" :key="msg">{{ msg }}</div>
+    </TransitionGroup>
     <div class="pane-h">
       Race phase: <span class="phase-text">{{ raceState.phase }}</span>
     </div>
@@ -87,6 +87,7 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 
 .pane-v .slim {
   gap: 4px;
+  max-width: 20%;
 }
 
 .leader {
@@ -97,11 +98,30 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 .game-table > tr > * {
   text-align: left;
 }
-
+/** CSS & Animations for Swap Events */
 .msg {
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
+}
+
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.list-leave-active {
+  position: absolute;
 }
 </style>

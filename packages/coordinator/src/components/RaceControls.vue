@@ -7,6 +7,7 @@ import { RaceStateOverview, RoomOverview } from "@grs/shared";
 import SwapGameControls from "./race-controls/SwapGameControls.vue";
 import RacePhaseControls from "./race-controls/RacePhaseControls.vue";
 import GameCompleteControls from "./race-controls/GameCompleteControls.vue";
+import SwapControls from "./race-controls/SwapControls.vue";
 
 const props = defineProps<{ room: RoomOverview, raceState: RaceStateOverview }>();
 const adminKey = ref( getAdminKey(props.room.roomName) );
@@ -35,7 +36,7 @@ async function archiveRoom() {
       <div class="pane-v">
         <SwapGameControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></SwapGameControls>
         <GameCompleteControls :race-state="raceState" :room-name="room.roomName" :admin-key="adminKey"></GameCompleteControls>
-
+        <SwapControls :room-name="room.roomName" :admin-key="adminKey"></SwapControls>
         <hr class="dashed">
 
         <div class="pane-h control-pane">
@@ -55,9 +56,6 @@ async function archiveRoom() {
 </template>
 
 <style scoped>
-.control-pane {
-  margin: 12px 0px 0px;
-}
 .danger {
   background-color: #f5a5a5;
   width: 80%;
