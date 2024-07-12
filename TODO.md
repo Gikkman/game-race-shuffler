@@ -13,5 +13,5 @@
 
 * Hash room key [DONE]
 * Ensure Room Name is sane [DONE]
-* Push "swap event" list to clients
+* Push "swap event" list to clients [DONE]
 * Check what happens when a runner resets their game
