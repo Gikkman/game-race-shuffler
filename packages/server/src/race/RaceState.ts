@@ -41,7 +41,7 @@ export default class RaceState {
 
   private swapModeConfig: SwapModeConfig;
   private swapMode: SwapMode;
-  private swapEventData: string[] = [];
+  private swapEventData: {msg: string, t: number}[] = [];
 
   constructor(args: RaceStateArgs|RaceStateData, onStateUpdate: StateUpdateCallback) {
     this.swapModeConfig = args.swapModeConfig;
@@ -192,7 +192,7 @@ export default class RaceState {
       return LOGGER.debug("Swapping to specific game is not possible when the game is not in the race");
     }
 
-    this.swapEventData.push("Manual Admin Swap");
+    this.swapEventData.push({msg: "Manual Admin Swap", t: Date.now()});
     if(this.swapEventData.length > 5) {
       this.swapEventData = this.swapEventData.slice(1);
     }
@@ -203,7 +203,7 @@ export default class RaceState {
 
   adminControl_manualSwapRandom() {
     LOGGER.debug("Admin request to swap to random game");
-    this.swapEventData.push("Manual Admin Swap");
+    this.swapEventData.push({msg: "Manual Admin Swap", t: Date.now()});
     if(this.swapEventData.length > 5) {
       this.swapEventData = this.swapEventData.slice(1);
     }
@@ -357,16 +357,14 @@ export default class RaceState {
   }
 
   private generateSwapBlockUntil() {
-    const min = Math.ceil(this.swapMinCooldown);
-    const max = Math.floor(this.swapMaxCooldown);
-    const delayLength = (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
+    const delayLength = FunctionUtils.randomIntInRange(this.swapMinCooldown, this.swapMaxCooldown) * 1000;
     return Date.now() + delayLength;
   }
 
   private swapModeBind(eventData: string) {
-    LOGGER.info("Swap event received from SwapMode binding");
+    LOGGER.debug("Swap event received from SwapMode binding");
 
-    this.swapEventData.push(eventData);
+    this.swapEventData.push({msg: eventData, t: Date.now()});
     if(this.swapEventData.length > 5) {
       this.swapEventData = this.swapEventData.slice(1);
     }

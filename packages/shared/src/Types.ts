@@ -21,7 +21,7 @@ export type RaceStateOverview = {
   swapQueueSize: number,
   swapBlockedUntil: number,
   swapMode: string,
-  swapEventData: string[],
+  swapEventData: {msg: string, t: number}[],
   swapMinCooldown: number,
   swapMaxCooldown: number,
 }

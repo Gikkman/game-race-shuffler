@@ -12,7 +12,7 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 <template>
   <div class="pane-v">
     <TransitionGroup name="list" tag="div" class="pane-h">
-      <div v-for="msg in raceState.swapEventData" class="msg" :key="msg">{{ msg }}</div>
+      <div v-for="event in raceState.swapEventData" class="msg" :key="event.t">{{ event.msg }}</div>
     </TransitionGroup>
     <div class="pane-h">
       Race phase: <span class="phase-text">{{ raceState.phase }}</span>
@@ -118,7 +118,7 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 }
 .list-leave-to {
   opacity: 0;
-  transform: translateX(-30px);
+  transform: translateX(-320px);
 }
 
 .list-leave-active {

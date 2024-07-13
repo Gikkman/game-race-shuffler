@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { Ref, ref } from 'vue';
 import { createRoom } from '../scripts/ServerApi';
 import { storeAdminKey } from '../scripts/KeyValueStore';
 import { CreateRoomRequest, SwapModeConfig } from '@grs/shared';
@@ -17,7 +17,8 @@ const games = ref(new Set<string>([
 
 const swapModes = ref([
   {text: "Manual", value: "manual", desc: ""},
-  {text: "Tiltify", value: "tiltify", desc: "Input campaign-id"}
+  {text: "Tiltify", value: "tiltify", desc: "Input campaign-id"},
+  {text: "Timer", value: "timer", desc: "Input min|max"},
 ])
 const swapModeSelected = ref(swapModes.value[0]);
 const swapModeExtra = ref("");
@@ -56,7 +57,7 @@ function removeGame(name: string) {
 function buildSwapModeConfig(): SwapModeConfig {
   const swapMode = swapModeSelected.value.value;
   const swapModeExtraData = swapModeExtra.value;
-  if(swapMode === "manual" || swapMode === "tiltify")
+  if(swapMode === "manual" || swapMode === "tiltify" || swapMode === "timer")
     return {swapMode, swapModeExtraData}
   else
     throw "Unknown swap mode";

@@ -42,7 +42,7 @@ export type RoomOverview = {
 }
 
 export type SwapModeConfig = {
-  swapMode: "manual"|"tiltify",
+  swapMode: "manual"|"tiltify"|"timer",
   swapModeExtraData: string,
 }
 

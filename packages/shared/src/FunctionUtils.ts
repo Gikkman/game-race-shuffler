@@ -47,3 +47,9 @@ function numberToRoman(s: string) {
 export function isSecureHost(host: string): boolean {
   return (host.startsWith("localhost") || host.startsWith("10.") || host.startsWith("172.") || host.startsWith("192.168.")) ? false : true;
 }
+
+export function randomIntInRange(minInclusive: number, maxInclusive: number) {
+  const min = Math.ceil(minInclusive);
+  const max = Math.floor(maxInclusive);
+  return (Math.floor(Math.random() * (max - min + 1)) + min);
+}
