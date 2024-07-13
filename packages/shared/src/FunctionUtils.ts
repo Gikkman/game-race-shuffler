@@ -9,12 +9,8 @@ export function sleep(timeoutMs: number) {
 export function calculateLogicalName(name: string): string {
   return name
     .toLocaleLowerCase()
-    .replace(/[^\d\w]/g, " ")
-    .replace(/ {2,}/, " ")
-    .split(" ")
-    .map(numberToRoman)
-    .join("");
-
+    .replaceAll(/[0-9]+/g, (s) => numberToRoman(s))
+    .replaceAll(/[^\d\w]/g, "");
 }
 
 function numberToRoman(s: string) {

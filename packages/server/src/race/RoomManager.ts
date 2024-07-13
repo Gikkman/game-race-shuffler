@@ -4,6 +4,7 @@ import * as Server from '../Server.js';
 import RoomState from "./RoomState.js";
 import RoomRepository from "./RoomRepository.js";
 import RoomArchive from "./RoomArchive.js";
+import InternalMessages from "../InternalMessages.js";
 
 
 /************************************************************************
@@ -38,7 +39,7 @@ export async function init() {
   });
   */
 
-  process.on("SIGINT", () => {
+  InternalMessages().addListener("shutdown", () => {
     LOGGER.info("Calling cleanup on each room");
     for(const room of rooms.values()) {
       LOGGER.info("Calling cleanup on room %s", room.roomName);

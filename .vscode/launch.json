@@ -44,6 +44,22 @@
       },
       "outputCapture": "std",
       "preLaunchTask": "npm: build"
+    },
+    {
+      "name": "Test this file",
+      "type": "node",
+      "request": "launch",
+      "args": [
+        "--import",
+        "tsx",
+        "--test",
+        "${file}"
+      ],
+      "outputCapture": "std",
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**",
+    ],
     }
-  ]
+  ],
 }

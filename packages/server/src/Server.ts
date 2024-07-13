@@ -4,6 +4,7 @@ import history from "connect-history-api-fallback";
 import { TipcNamespaceServer, TipcNodeServer, TipcServer } from 'tipc/cjs';
 
 import { Logger, WebsocketContract, PathUtils } from '@grs/shared';
+import InternalMessages from './InternalMessages.js';
 
 const app = express();
 
@@ -51,7 +52,8 @@ export async function init() {
 
   await setupWebSocket(server);
 
-  process.on("SIGINT", () => {
+  InternalMessages().addListener("shutdown", () => {
+    LOGGER.info("Stopping server");
     initialized = false;
     server?.close();
     tipcServer?.shutdown();

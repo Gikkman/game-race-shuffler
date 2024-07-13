@@ -17,7 +17,7 @@ module.exports = {
     project: "packages/**/tsconfig.json"
   },
 
-  ignorePatterns: ["dist", "html", "vite.config.ts", "**/*.vue"],
+  ignorePatterns: ["dist", "html", "vite.config.ts", "**/*.vue", "**/*.test.ts"],
 
   rules: {
     "@typescript-eslint/no-unused-vars": [

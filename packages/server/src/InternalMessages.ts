@@ -4,6 +4,7 @@ import { TiltifyDonationEvent } from "./Types.js";
 type Contract = {
   tiltifyWebhook: TiltifyDonationEvent,
   cleanupCron: void,
+  shutdown: void,
 }
 
 let initialized = false;
