@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
+import { ref } from 'vue';
 import { createRoom } from '../scripts/ServerApi';
 import { storeAdminKey } from '../scripts/KeyValueStore';
 import { CreateRoomRequest, SwapModeConfig } from '@grs/shared';
