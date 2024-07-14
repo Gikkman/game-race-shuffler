@@ -105,6 +105,11 @@ function handleWebhook(req: Request) {
     return true;
   }
 
+  if(!body.meta.event_type || !body.meta.event_type.includes("donation")) {
+    LOGGER.info("Unsupported webhook event type: %s. Skipping", body.meta.event_type);
+    return true;
+  }
+
   InternalMessages().send("tiltifyWebhook", {
     amount: body.data.amount,
     campaign_id: body.data.campaign_id,

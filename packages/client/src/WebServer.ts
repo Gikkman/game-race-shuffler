@@ -44,19 +44,19 @@ export async function init(): Promise<void> {
       logLevel: TIPC_LOGGER.getLogLevel(),
     },
     onDisconnect: async () => {
-      TIPC_LOGGER.error("Server disconnected. Reconnecting");
+      LOGGER.error("Server disconnected. Reconnecting");
       const wait = 1000;
       for(let attempt = 0; attempt < 120; attempt++) {
         await FunctionUtils.sleep(wait);
         try {
           await tipcConnectionManager.connect();
-          return TIPC_LOGGER.info("Reconnect successful");
+          return LOGGER.info("Reconnect successful");
         }
         catch (ex) {
-          TIPC_LOGGER.info("Reconnect attempt failed. Waiting");
+          LOGGER.info("Reconnect attempt failed. Waiting");
         }
       }
-      TIPC_LOGGER.error("Reconnect failed permanently. Exiting");
+      LOGGER.error("Reconnect failed permanently. Exiting");
       process.exit(1);
     }
   });
