@@ -90,6 +90,11 @@ export function popBizhawkEventQueue(): BizhawkEvent | undefined {
 }
 
 export function launchBizhawk(serverPort: number) {
+  process.on('SIGINT', () => {
+    LOGGER.info("Sending SIGINT to bizhawk");
+    bizhawkProc?.kill('SIGINT');
+  });
+
   bizhawkCallPort = serverPort;
   internalLaunchBizhawk();
 }

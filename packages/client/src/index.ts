@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { PathUtils } from '@grs/shared';
+import { FunctionUtils, PathUtils } from '@grs/shared';
 
 import * as ClientConfigService from './ClientConfigService.js';
 import * as WebServer from './WebServer.js';
@@ -23,6 +23,10 @@ async function main() {
   await BizhawkController.init();
   await SaveStateService.init();
   launchBizhawk(WebServer.getAddress().port);
+
+  // Give Bizhawk ~4 seconds to launch
+  // In a perfect world we'd know when Bizhawk was ready but I haven't figured out how to do that yet.
+  await FunctionUtils.sleep(4000);
 
   await RaceService.init();
 }

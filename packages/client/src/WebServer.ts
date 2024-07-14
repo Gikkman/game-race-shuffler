@@ -44,7 +44,7 @@ export async function init(): Promise<void> {
       logLevel: TIPC_LOGGER.getLogLevel(),
     },
     onDisconnect: async () => {
-      LOGGER.error("Server disconnected. Reconnecting");
+      LOGGER.error("Websocket server disconnected. Reconnecting");
       const wait = 1000;
       for(let attempt = 0; attempt < 120; attempt++) {
         await FunctionUtils.sleep(wait);
