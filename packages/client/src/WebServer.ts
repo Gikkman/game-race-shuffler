@@ -49,7 +49,8 @@ export async function init(): Promise<void> {
       for(let attempt = 0; attempt < 120; attempt++) {
         await FunctionUtils.sleep(wait);
         try {
-          return await tipcConnectionManager.connect();
+          await tipcConnectionManager.connect();
+          return TIPC_LOGGER.info("Reconnect successful");
         }
         catch (ex) {
           TIPC_LOGGER.info("Reconnect attempt failed. Waiting");

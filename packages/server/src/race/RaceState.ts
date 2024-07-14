@@ -362,20 +362,25 @@ export default class RaceState {
   }
 
   private swapModeBind(eventData: string) {
-    LOGGER.debug("Swap event received from SwapMode binding");
+    try {
+      LOGGER.debug("Swap event received from SwapMode binding");
 
-    this.swapEventData.push({msg: eventData, t: Date.now()});
-    if(this.swapEventData.length > 5) {
-      this.swapEventData = this.swapEventData.slice(1);
-    }
+      this.swapEventData.push({msg: eventData, t: Date.now()});
+      if(this.swapEventData.length > 5) {
+        this.swapEventData = this.swapEventData.slice(1);
+      }
 
-    // If the race is active, trigger a swap
-    // Otherwise, just send a state update
-    if(this.phase==="ACTIVE") {
-      this.swapGameIfPossible("swapEventData");
+      // If the race is active, trigger a swap
+      // Otherwise, just send a state update
+      if(this.phase==="ACTIVE") {
+        this.swapGameIfPossible("swapEventData");
+      }
+      else {
+        this.updateState("swapEventData");
+      }
     }
-    else {
-      this.updateState("swapEventData");
+    catch (ex) {
+      LOGGER.error(ex as Error);
     }
   }
 }
