@@ -31,7 +31,7 @@ RUN npm i --no-audit --no-fund
 
 COPY ./packages/coordinator ./packages/coordinator
 RUN npm run build:web
-ENTRYPOINT "bash"
+
 ########################################################################
 # Build actual runtime image
 ########################################################################
