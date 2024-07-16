@@ -4,3 +4,4 @@ _states*/
 
 *.tsbuildinfo
 *.override.json
+*.db

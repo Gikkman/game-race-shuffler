@@ -1,0 +1,8 @@
+**/node_modules/
+**/dist/
+**/html/
+_states*/
+
+**/*.tsbuildinfo
+**/*.override.json
+**/*.db
