@@ -13,6 +13,7 @@ export type RaceStateData = {
   participants: RaceParticipant[],
   phase: RacePhase,
   games: RaceGame[],
+  swapCount: number,
   swapQueueSize: number,
   swapBlockedUntil: number,
   currentGame?: RaceGame,
@@ -32,6 +33,7 @@ export default class RaceState {
   private currentGame?: RaceGame;
   private onStateUpdate: StateUpdateCallback;
 
+  private swapCount = 0;
   private swapQueueSize = 0;
   private swapBlockedUntil = 0;
   private swapBlockTimer?: NodeJS.Timeout;
@@ -57,6 +59,7 @@ export default class RaceState {
       this.games = args.games;
       this.currentGame = args.currentGame;
 
+      this.swapCount = args.swapCount ?? 0;
       this.swapQueueSize = args.swapQueueSize;
       this.swapBlockedUntil = args.swapBlockedUntil;
       if(this.swapQueueSize) {
@@ -81,6 +84,7 @@ export default class RaceState {
       currentGame: this.currentGame,
       participants: [...this.participants],
       games: [...this.games],
+      swapCount: this.swapCount,
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
       swapMode: this.swapModeConfig.swapMode,
@@ -132,7 +136,8 @@ export default class RaceState {
     }
     else {
       this.currentGame = nextGame;
-      additionalStatesToSignal.push("currentGame");
+      this.swapCount += 1;
+      additionalStatesToSignal.push("currentGame", "swapCount");
     }
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
@@ -146,6 +151,7 @@ export default class RaceState {
       currentGame: this.currentGame,
       participants: [...this.participants],
       games: [...this.games],
+      swapCount: this.swapCount,
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
       swapModeConfig: this.swapModeConfig,

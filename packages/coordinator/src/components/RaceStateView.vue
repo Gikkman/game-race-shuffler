@@ -1,19 +1,32 @@
 <script setup lang="ts">
 import { RaceStateOverview } from '@grs/shared';
+import SwapEventView from './race-views/SwapEventView.vue';
+import { onUnmounted, ref } from 'vue';
 
-defineProps<{ raceState: RaceStateOverview }>();
+const props = defineProps<{ raceState: RaceStateOverview }>();
 
-let calculateSwapBlockedUntil = (unixMillis: number) => {
-  if(unixMillis < Date.now()) return "-";
-  return new Date(unixMillis).toLocaleTimeString(navigator.language).split(" ")[0];
-}
+let swapBlockCooldown = ref('-');
+let swapBlockCooldownJob = setInterval(() => {
+  const diff = props.raceState.swapBlockedUntil - Date.now();
+  if(diff > 10_000) {
+    swapBlockCooldown.value = Math.floor(diff / 1000) + "s";
+  }
+  else if (diff > 0) {
+    swapBlockCooldown.value = Math.floor(diff / 1000) + "." + Math.floor((diff % 1000)/100) + "s";
+  }
+  else {
+    swapBlockCooldown.value = '-';
+  }
+} , 100);
+
+onUnmounted(() => {
+  clearInterval(swapBlockCooldownJob);
+})
 </script>
 
 <template>
   <div class="pane-v">
-    <TransitionGroup name="list" tag="div" class="pane-h">
-      <div v-for="event in raceState.swapEventData" class="msg" :key="event.t">{{ event.msg }}</div>
-    </TransitionGroup>
+    <SwapEventView :race-state="raceState"></SwapEventView>
     <div class="pane-h">
       Race phase: <span class="phase-text">{{ raceState.phase }}</span>
     </div>
@@ -42,10 +55,18 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
       </div>
       <div class="pane-v slim">
         <div>
-          Blocked Until
+          Swap Cooldown
+        </div>
+        <div class="monospace">
+          {{ swapBlockCooldown }}
+        </div>
+      </div>
+      <div class="pane-v slim">
+        <div>
+          Swap Count
         </div>
         <div>
-          {{ calculateSwapBlockedUntil(raceState.swapBlockedUntil) }}
+          {{ raceState.swapCount }}
         </div>
       </div>
     </div>
@@ -93,6 +114,10 @@ let calculateSwapBlockedUntil = (unixMillis: number) => {
 .leader {
   color: darkred;
   font-weight: bold;
+}
+
+.monospace {
+  font-family: monospace;
 }
 
 .game-table > tr > * {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 import { RaceStateOverview, RoomOverview } from '@grs/shared';
 import RaceStateView from '../components/RaceStateView.vue';
 import RaceControls from '../components/RaceControls.vue';
@@ -7,6 +7,7 @@ import * as TipcListener from '../scripts/TipcListener';
 import * as ServerApi from "../scripts/ServerApi";
 import * as Router from '../scripts/Router';
 import RaceFooter from '../components/RaceFooter.vue';
+import { TipcSubscription } from 'tipc';
 
 const roomName = Router.getRoute().params["name"] as string;
 
@@ -15,6 +16,7 @@ const room = ref<RoomOverview>();
 const raceState = ref<RaceStateOverview>();
 const ready = ref(false);
 
+let tipcSub: TipcSubscription|undefined = undefined;
 TipcListener.init().then(async () => {
   ServerApi.getRoom(roomName).then(roomResponse => {
     room.value = roomResponse;
@@ -24,7 +26,8 @@ TipcListener.init().then(async () => {
     ready.value = true;
   })
 }).finally(() => {
-  TipcListener.getClient().addListener("raceStateUpdate", update => {
+  console.info("Subscribing listener for room " + roomName);
+  tipcSub = TipcListener.getClient().addListener("raceStateUpdate", update => {
     if (update.roomName === roomName) {
       console.log(update.changes)
       raceState.value = update;
@@ -32,6 +35,10 @@ TipcListener.init().then(async () => {
   });
 })
 
+onUnmounted(() =>{
+  console.info("Unsubscribing listener for room " + roomName);
+  tipcSub?.unsubscribe()
+})
 </script>
 
 <template>

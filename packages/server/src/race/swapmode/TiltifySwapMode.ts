@@ -19,7 +19,7 @@ export class TiltifySwapMode implements SwapMode{
       if( matchesCampaignId || acceptAnyCampaign ) {
         if( this.sink ) {
           LOGGER.debug("Webhook campaignId matched. Sending event to sink");
-          const info = `${event.donor_name}: ${event.amount.value}${event.amount.currency}`;
+          const info = `Donation: ${event.amount.value}${event.amount.currency}`;
           this.sink( info );
         }
         else {

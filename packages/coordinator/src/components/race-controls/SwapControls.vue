@@ -16,14 +16,14 @@ function clearSwapQueue() {
 function clearBlockTimer() {
   if(!props.adminKey) return;
 
-  if(confirm("Really set 'Blocked Until' to '-'?")) {
+  if(confirm("Really clear 'Block Cooldown'?")) {
     ServerApi.clearBlockTimer({adminKey: props.adminKey, roomName: props.roomName})
   }
 }
 function setBlockTimer() {
   if(!props.adminKey) return;
 
-  if(confirm("Really set 'Blocked Until'?")) {
+  if(confirm("Really restart 'Block Cooldown'?")) {
     ServerApi.setBlockTimer({adminKey: props.adminKey, roomName: props.roomName})
   }
 }
@@ -36,8 +36,8 @@ function setBlockTimer() {
   </div>
   <div class="pane-h" style="flex: 1; gap: 24px">
     <button :disabled="disabled" @click="clearSwapQueue" >Clear Swap Queue</button>
-    <button :disabled="disabled" @click="clearBlockTimer">Clear Block Timer</button>
-    <button :disabled="disabled" @click="setBlockTimer"  >Set Block Timer</button>
+    <button :disabled="disabled" @click="clearBlockTimer">Clear Block Cooldown</button>
+    <button :disabled="disabled" @click="setBlockTimer"  >Restart Block Cooldown</button>
   </div>
 </div>
 </template>

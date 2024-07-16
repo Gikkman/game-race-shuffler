@@ -18,6 +18,7 @@ export type RaceStateOverview = {
   participants: RaceParticipant[],
   phase: RacePhase,
   currentGame?: RaceGame,
+  swapCount: number,
   swapQueueSize: number,
   swapBlockedUntil: number,
   swapMode: string,
