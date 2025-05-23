@@ -32,7 +32,7 @@ export class TimerSwapMode implements SwapMode{
   setupTimeout() {
     this.timeout = setTimeout(() => {
       if(this.sink) {
-        this.sink("Timer Swap Event");
+        this.sink(["Timer Swap Event"]);
       }
       this.setupTimeout();
     }, generateTimeoutTime(this.min, this.max));

@@ -110,15 +110,24 @@ function handleWebhook(req: Request) {
     return true;
   }
 
-  InternalMessages().send("tiltifyWebhook", {
-    amount: body.data.amount,
-    campaign_id: body.data.campaign_id,
-    donor_name: body.data.donor_name,
-    id: body.meta.id
-  });
-
   // Keep event IDs for 5 minutes at least
   seenIdsAndTtl.set(body.meta.id, Date.now() + (5 * 60 * 1000));
+
+  try {
+    InternalMessages().send("tiltifyWebhook", {
+      amount: {
+        currency: body.data.amount.currency,
+        value: parseFloat(body.data.amount.value)
+      },
+      campaign_id: body.data.campaign_id,
+      donor_name: body.data.donor_name,
+      id: body.meta.id
+    });
+  }
+  catch(ex: unknown) {
+    LOGGER.error(ex as Error);
+  }
+
   return true;
 }
 

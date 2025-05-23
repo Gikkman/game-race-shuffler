@@ -1,7 +1,7 @@
 export type TiltifyDonationEvent = {
   amount: {
     currency: string,
-    value: string,
+    value: number,
   }
   campaign_id: string,
   donor_name: string,

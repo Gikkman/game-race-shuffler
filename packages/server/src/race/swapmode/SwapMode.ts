@@ -1,4 +1,4 @@
-export type SwapEventSink = (eventInfo: string) => void;
+export type SwapEventSink = (eventsInfo: string[]) => void;
 
 export type SwapMode = {
   bind( swapEventSink: SwapEventSink ): void;

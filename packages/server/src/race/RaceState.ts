@@ -13,9 +13,9 @@ export type RaceStateData = {
   participants: RaceParticipant[],
   phase: RacePhase,
   games: RaceGame[],
-  swapCount: number,
-  swapQueueSize: number,
-  swapBlockedUntil: number,
+  swapCount: number,  // Number of swaps that have occurred
+  swapQueueSize: number, // Number of swaps queued to be performed
+  swapBlockedUntil: number, // Unix timestap until which no swaps can occurr
   currentGame?: RaceGame,
   swapModeConfig: SwapModeConfig,
   swapMinCooldown: number,
@@ -367,11 +367,11 @@ export default class RaceState {
     return Date.now() + delayLength;
   }
 
-  private swapModeBind(eventData: string) {
+  private swapModeBind(eventData: string[]) {
     try {
-      LOGGER.debug("Swap event received from SwapMode binding");
+      LOGGER.debug(eventData.length + " swap event(s) received from SwapMode binding");
 
-      this.swapEventData.push({msg: eventData, t: Date.now()});
+      eventData.forEach(e => this.swapEventData.push({msg: e, t: Date.now()}));
       if(this.swapEventData.length > 5) {
         this.swapEventData = this.swapEventData.slice(1);
       }

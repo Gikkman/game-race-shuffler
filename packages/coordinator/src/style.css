@@ -42,7 +42,7 @@ button {
   font-weight: 500;
   font-family: inherit;
   transition: border-color 0.25s;
-  background-color: #f5f5f5;
+  background-color: #a8a8a8;
 }
 
 button:hover {
@@ -55,7 +55,7 @@ button:focus-visible {
 
 *:disabled {
   cursor: not-allowed;
-  color: #a8a8a8;
+  color: #333;
 }
 button:disabled:hover {
   border-color: red;
@@ -63,6 +63,7 @@ button:disabled:hover {
 
 input {
   height: 25px;
+  background-color: #a8a8a8;
 }
 
 h3 {

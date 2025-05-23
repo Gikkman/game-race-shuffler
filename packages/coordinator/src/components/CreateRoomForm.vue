@@ -8,11 +8,11 @@ import { router } from '../scripts/Router';
 const roomName = ref("TEST");
 const roomKey = ref("TEST");
 const games = ref(new Set<string>([
-  "Super Mario Bros.",
-  "Batman - The Video Game",
-  "Tetris",
-  "Contra",
-  "DuckTales"
+  "Battletoads",
+  "Chip 'n Dale",
+  "Marble Madness",
+  "Super C",
+  "Tetris"
 ]))
 
 const swapModes = ref([
@@ -23,8 +23,8 @@ const swapModes = ref([
 const swapModeSelected = ref(swapModes.value[0]);
 const swapModeExtra = ref("");
 
-const swapMinCooldown = ref(10);
-const swapMaxCooldown = ref(10);
+const swapMinCooldown = ref(2);
+const swapMaxCooldown = ref(15);
 
 const newGame = ref("")
 
@@ -97,7 +97,7 @@ function buildSwapModeConfig(): SwapModeConfig {
     </div>
     <div class="pane-h swap-cd-pane">
       <div class="pane-h">
-        <div>Swap Min Cooldown</div><input class="num-input" type="number" v-bind:max="swapMaxCooldown" v-model="swapMinCooldown" min="3">
+        <div>Swap Min Cooldown</div><input class="num-input" type="number" v-bind:max="swapMaxCooldown" v-model="swapMinCooldown" min="2">
       </div>
       <div class="pane-h">
         <div>Swap Max Cooldown</div><input class="num-input" type="number" v-bind:min="swapMinCooldown" v-model="swapMaxCooldown">
