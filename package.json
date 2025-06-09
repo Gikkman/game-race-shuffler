@@ -16,7 +16,7 @@
     "start:clientA": "npm run --workspace packages/client start -- --config=client-config-A.ini",
     "start:clientB": "npm run --workspace packages/client start -- --config=client-config-B.ini",
     "start:server": "npm run --workspace packages/server start",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present || echo '\n***** THERE WERE ERRORS *****' >&2 && exit 1"
   },
   "keywords": [],
   "license": "AGPL-3.0",

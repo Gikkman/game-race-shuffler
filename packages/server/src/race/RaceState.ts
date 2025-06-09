@@ -122,9 +122,9 @@ export default class RaceState {
     this.doPostGameCompletionActions(game);
   }
 
-  swapGameIfPossible(...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
+  swapGameIfPossible(swapsToPerforms:  number, ...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
     if(this.swapBlockTimer) {
-      this.swapQueueSize+=1;
+      this.swapQueueSize+=swapsToPerforms;
       this.updateState("swapQueueSize");
       return;
     }
@@ -138,6 +138,11 @@ export default class RaceState {
       this.currentGame = nextGame;
       this.swapCount += 1;
       additionalStatesToSignal.push("currentGame", "swapCount");
+
+      if(swapsToPerforms > 1) {
+        this.swapQueueSize += swapsToPerforms - 1;
+        additionalStatesToSignal.push("swapQueueSize");
+      }
     }
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
@@ -177,7 +182,7 @@ export default class RaceState {
     this.phase = phase;
 
     if(phase === "ACTIVE" && !this.currentGame) {
-      this.swapGameIfPossible("phase");
+      this.swapGameIfPossible(1, "phase");
     }
     else {
       this.updateState("phase");
@@ -213,7 +218,7 @@ export default class RaceState {
     if(this.swapEventData.length > 5) {
       this.swapEventData = this.swapEventData.slice(1);
     }
-    this.swapGameIfPossible("swapEventData");
+    this.swapGameIfPossible(1, "swapEventData");
   }
 
   adminControl_markGameAsCompleted(gameName: string, participantName: string) {
@@ -248,7 +253,7 @@ export default class RaceState {
     // If removing the "completed" mark made the race not ended anymore, start it up again
     if(this.phase === "ENDED" && !this.isRaceCompleted()) {
       this.phase = "ACTIVE";
-      this.swapGameIfPossible("participants", "phase");
+      this.swapGameIfPossible(1, "participants", "phase");
     }
     // Otherwise, just push a state update
     else {
@@ -284,10 +289,11 @@ export default class RaceState {
   *  Private methods
   ************************************************************************/
   private updateState(...changedFields: (keyof RaceStateOverview)[]) {
+    const changes = [...new Set(changedFields)];
     const state = this.getStateSummary();
     this.onStateUpdate({
       ...state,
-      changes: changedFields
+      changes,
     });
   }
 
@@ -308,7 +314,7 @@ export default class RaceState {
     }
     // If the current game was marked as completed, swap game
     else if(completedGame === this.currentGame) {
-      this.swapGameIfPossible("participants", "games");
+      this.swapGameIfPossible(1, "participants", "games");
     }
     // Otherwise, just push an update about the completion and score
     else {
@@ -357,7 +363,7 @@ export default class RaceState {
       this.swapBlockTimer = undefined;
       if(this.swapQueueSize > 0) {
         this.swapQueueSize--;
-        this.swapGameIfPossible("swapQueueSize");
+        this.swapGameIfPossible(1, "swapQueueSize");
       }
     }, timeout);
   }
@@ -376,10 +382,10 @@ export default class RaceState {
         this.swapEventData = this.swapEventData.slice(1);
       }
 
-      // If the race is active, trigger a swap
+      // If the race is active, trigger a swap for each event data
       // Otherwise, just send a state update
       if(this.phase==="ACTIVE") {
-        this.swapGameIfPossible("swapEventData");
+        this.swapGameIfPossible(eventData.length, "swapEventData");
       }
       else {
         this.updateState("swapEventData");

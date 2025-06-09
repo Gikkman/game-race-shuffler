@@ -12,6 +12,6 @@ describe("desc", () => {
     await FunctionUtils.sleep(1000);
     main.shutdown();
 
-    assert.equal(true, true);
+    assert.ok(true);
   });
 });
