@@ -19,8 +19,8 @@ export class TiltifySwapMode implements SwapMode{
       if( matchesCampaignId || acceptAnyCampaign ) {
         if( this.sink ) {
           LOGGER.debug("Webhook campaignId matched. Sending event to sink");
-          const info = `Donation: ${event.amount.value}${event.amount.currency}`;
-          const count = Math.ceil((event.amount.value + 1) / 2); //An additional swap every 2€ donated
+          const info = `Donation: ${event.amount.value} ${event.amount.currency}`;
+          const count = Math.min(Math.ceil(Math.floor(event.amount.value) / 2), 10); //One swap for 1€, then an extra every 2€, to a max of 10
           const events = new Array<string>();
           for(let i = 1; i <= count; i++) {
             events.push(info + ` (${i}/${count})`);

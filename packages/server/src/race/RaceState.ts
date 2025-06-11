@@ -374,11 +374,15 @@ export default class RaceState {
   }
 
   private swapModeBind(eventData: string[]) {
+    if(!eventData[0]) {
+      LOGGER.error("EventData contained a falsy element", eventData);
+      return;
+    }
     try {
       LOGGER.debug(eventData.length + " swap event(s) received from SwapMode binding");
 
-      eventData.forEach(e => this.swapEventData.push({msg: e, t: Date.now()}));
-      if(this.swapEventData.length > 5) {
+      this.swapEventData.push({msg: eventData[0], t: Date.now()});
+      while(this.swapEventData.length > 5) {
         this.swapEventData = this.swapEventData.slice(1);
       }
 
