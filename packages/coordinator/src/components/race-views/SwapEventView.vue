@@ -21,11 +21,12 @@ defineProps<{ raceState: RaceStateOverview }>();
 }
 
 .msg {
-  max-width: 100px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
   float: left;
+  padding: 0 5px;
 }
 
 /** Animations for Swap Events */

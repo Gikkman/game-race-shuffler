@@ -55,6 +55,10 @@ export async function init(): Promise<void> {
         catch (ex) {
           LOGGER.info("Reconnect attempt failed. Waiting");
         }
+        // Break if we've received a SIGINT
+        if(!initialized) {
+          return;
+        }
       }
       LOGGER.error("Reconnect failed permanently. Exiting");
       process.exit(1);

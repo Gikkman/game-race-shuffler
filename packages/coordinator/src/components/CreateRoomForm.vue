@@ -9,7 +9,7 @@ const roomName = ref("TEST");
 const roomKey = ref("TEST");
 const games = ref(new Set<string>([
   "Battletoads",
-  "Chip 'n Dale",
+  "Chip 'n Dale - Rescue Rangers",
   "Marble Madness",
   "Super C",
   "Tetris"
