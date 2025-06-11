@@ -50,10 +50,16 @@ while true do
     request()
   end
 
-  if (frameCount > 120 and gameLoaded == true and gameCompleted == false and input.get()["Space"]) then
-    print("INPUT: Game completed at frame " .. frameCount)
-    comm.httpPost(url .. "/complete", "")
-    gameCompleted = true
+  if (frameCount > 120 and gameLoaded == true and gameCompleted == false) then
+    if (input.get()["Space"]) then
+      print("INPUT: Game completed at frame " .. frameCount)
+      comm.httpPost(url .. "/complete", "")
+      gameCompleted = true
+    elseif (input.get()["R"]) then
+      print("INPUT: Game reset at frame " .. frameCount)
+      client.reboot_core()
+      frameCount = 0
+    end
   end
 
 
