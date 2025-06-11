@@ -63,7 +63,7 @@ export default class RaceState {
       this.swapQueueSize = args.swapQueueSize;
       this.swapBlockedUntil = args.swapBlockedUntil;
       if(this.swapQueueSize) {
-        this.startSwapBlockTimer(args.swapBlockedUntil);
+        this.swapBlockTimer = this.startSwapBlockTimer(args.swapBlockedUntil);
       }
     }
     else {
@@ -125,7 +125,7 @@ export default class RaceState {
   swapGameIfPossible(swapsToPerforms:  number, ...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
     if(this.swapBlockTimer) {
       this.swapQueueSize+=swapsToPerforms;
-      this.updateState("swapQueueSize");
+      this.updateState(...additionalStatesToSignal, "swapQueueSize");
       return;
     }
     // The 'alternatives' array might be an empty here, if no more games are available, and then 'nextGame' will be undefined
@@ -146,7 +146,7 @@ export default class RaceState {
     }
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
-    this.startSwapBlockTimer(this.swapBlockedUntil);
+    this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
     this.updateState(...additionalStatesToSignal, "swapBlockedUntil");
   }
 
@@ -277,11 +277,8 @@ export default class RaceState {
 
   adminControl_setBlockTimer() {
     LOGGER.debug("Admin request to set a (new) swapBlockTimer");
-    // If we don't clear the previous timer that might be running, we'll
-    // get several timer resolves after a while
-    clearTimeout(this.swapBlockTimer);
     this.swapBlockedUntil = this.generateSwapBlockUntil();
-    this.startSwapBlockTimer(this.swapBlockedUntil);
+    this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
     this.updateState("swapBlockedUntil");
   }
 
@@ -358,8 +355,14 @@ export default class RaceState {
   }
 
   private startSwapBlockTimer(swapBlockUntilUnix: number) {
+    // If we don't clear the previous timer that might be running, we'll
+    // get several timer resolves after a while
+    if(this.swapBlockTimer) {
+      clearTimeout(this.swapBlockTimer);
+    }
+
     const timeout = Math.max(swapBlockUntilUnix - Date.now(), 0);
-    this.swapBlockTimer = setTimeout(() => {
+    return setTimeout(() => {
       this.swapBlockTimer = undefined;
       if(this.swapQueueSize > 0) {
         this.swapQueueSize--;
