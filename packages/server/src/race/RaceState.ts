@@ -2,6 +2,8 @@ import { RaceStateUpdate, Logger, RaceGame, RaceParticipant, RacePhase, RaceStat
 import SwapModeFactory from "./swapmode/SwapModeFactory.js";
 import { SwapMode } from "./swapmode/SwapMode.js";
 
+const MINIMUM_COOLDOWN_MILLIS = 2000;
+
 type RaceStateArgs = {
   games: string[],
   swapModeConfig: SwapModeConfig,
@@ -16,6 +18,7 @@ export type RaceStateData = {
   swapCount: number,  // Number of swaps that have occurred
   swapQueueSize: number, // Number of swaps queued to be performed
   swapBlockedUntil: number, // Unix timestap until which no swaps can occurr
+  lastSwapTimestamp: number,
   currentGame?: RaceGame,
   swapModeConfig: SwapModeConfig,
   swapMinCooldown: number,
@@ -36,6 +39,7 @@ export default class RaceState {
   private swapCount = 0;
   private swapQueueSize = 0;
   private swapBlockedUntil = 0;
+  private lastSwapTimestamp = 0;
   private swapBlockTimer?: NodeJS.Timeout;
 
   private swapMinCooldown: number;
@@ -62,6 +66,7 @@ export default class RaceState {
       this.swapCount = args.swapCount ?? 0;
       this.swapQueueSize = args.swapQueueSize;
       this.swapBlockedUntil = args.swapBlockedUntil;
+      this.lastSwapTimestamp = args.lastSwapTimestamp;
       if(this.swapQueueSize) {
         this.swapBlockTimer = this.startSwapBlockTimer(args.swapBlockedUntil);
       }
@@ -124,6 +129,16 @@ export default class RaceState {
 
   swapGameIfPossible(swapsToPerforms:  number, ...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
     if(this.swapBlockTimer) {
+      // ## BUSINESS LOGIC
+      // On a new swap request, we set the cooldown to (last swap time + min cooldown), then restart
+      // the swap block timer. This will either set the cooldown to a timestamp in the past (and thus
+      // trigger a new swap instantly) or set it shortly into the future (making the swap request occur
+      // as soon as possible while still respecting minimum cooldowns)
+      this.swapBlockedUntil = this.lastSwapTimestamp + MINIMUM_COOLDOWN_MILLIS;
+      this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
+      additionalStatesToSignal.push("swapBlockedUntil");
+      // ## END BUSINESS LOGIC
+
       this.swapQueueSize+=swapsToPerforms;
       this.updateState(...additionalStatesToSignal, "swapQueueSize");
       return;
@@ -147,6 +162,7 @@ export default class RaceState {
 
     this.swapBlockedUntil = this.generateSwapBlockUntil();
     this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
+    this.lastSwapTimestamp = Date.now();
     this.updateState(...additionalStatesToSignal, "swapBlockedUntil");
   }
 
@@ -159,6 +175,7 @@ export default class RaceState {
       swapCount: this.swapCount,
       swapQueueSize: this.swapQueueSize,
       swapBlockedUntil: this.swapBlockedUntil,
+      lastSwapTimestamp: this.lastSwapTimestamp,
       swapModeConfig: this.swapModeConfig,
       swapMinCooldown: this.swapMinCooldown,
       swapMaxCooldown: this.swapMaxCooldown,
