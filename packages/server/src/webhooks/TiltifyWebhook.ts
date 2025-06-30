@@ -1,9 +1,10 @@
 import * as crypto from 'node:crypto';
 import { Request } from "express";
-import { Logger } from '@grs/shared';
+import { Logger, PathUtils } from '@grs/shared';
 import * as Server from '../Server.js';
 import { getConfig } from '../ServerConfig.js';
 import InternalMessages from '../InternalMessages.js';
+import Datastore from 'nedb-promises';
 
 type TiltifyEvent = {
   data: {
@@ -41,6 +42,7 @@ const seenIdsAndTtl = new Map<string, number>();
 const LOGGER = Logger.getLogger("TiltifyWebhook");
 let tiltifyWebhookId: string;
 let tiltifyWebhookSecret: string;
+let tiltifyEvents: Datastore<Partial<TiltifyEvent>>;
 let initialized = false;
 
 export function init() {
@@ -66,6 +68,9 @@ export function init() {
       res.status(400).send("BAD REQUEST");
     }
   });
+
+  const tiltifyEventLog = PathUtils.pathRelativeToWorkspaceRoot("tiltify-events.db");
+  tiltifyEvents = Datastore.create({filename: tiltifyEventLog});
 
   InternalMessages().addListener("cleanupCron", () => cleanupOldWebhookEventIds());
 }
@@ -123,11 +128,11 @@ function handleWebhook(req: Request) {
       donor_name: body.data.donor_name,
       id: body.meta.id
     });
+    tiltifyEvents.insert(body);
   }
   catch(ex: unknown) {
     LOGGER.error(ex as Error);
   }
-
   return true;
 }
 

@@ -73,10 +73,10 @@ class Logger {
       return;
     }
     if (typeof message === "object" || Array.isArray(message)) {
-      console.log(`[${logLevelToStr(minLevel)}]${this.nameStr}`, message, ...rest);
+      console.log(`${new Date().toISOString()} [${logLevelToStr(minLevel)}]${this.nameStr}`, message, ...rest);
     }
     else {
-      console.log(`[${logLevelToStr(minLevel)}]${this.nameStr} ${message}`, ...rest);
+      console.log(`${new Date().toISOString()} [${logLevelToStr(minLevel)}]${this.nameStr} ${message}`, ...rest);
     }
   }
 }
