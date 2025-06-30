@@ -129,16 +129,6 @@ export default class RaceState {
 
   swapGameIfPossible(swapsToPerforms:  number, ...additionalStatesToSignal:(keyof RaceStateOverview)[]) {
     if(this.swapBlockTimer) {
-      // ## BUSINESS LOGIC
-      // On a new swap request, we set the cooldown to (last swap time + min cooldown), then restart
-      // the swap block timer. This will either set the cooldown to a timestamp in the past (and thus
-      // trigger a new swap instantly) or set it shortly into the future (making the swap request occur
-      // as soon as possible while still respecting minimum cooldowns)
-      this.swapBlockedUntil = this.lastSwapTimestamp + MINIMUM_COOLDOWN_MILLIS;
-      this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
-      additionalStatesToSignal.push("swapBlockedUntil");
-      // ## END BUSINESS LOGIC
-
       this.swapQueueSize+=swapsToPerforms;
       this.updateState(...additionalStatesToSignal, "swapQueueSize");
       return;
@@ -164,6 +154,24 @@ export default class RaceState {
     this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
     this.lastSwapTimestamp = Date.now();
     this.updateState(...additionalStatesToSignal, "swapBlockedUntil");
+  }
+
+  /**
+   * This function will set the cooldown to (last swap time + min cooldown), then restart
+   * the swap block timer. This will either set the cooldown to a timestamp in the past (and thus
+   * trigger a new swap instantly) or set it shortly into the future (making the swap request occur
+   * as soon as possible while still respecting minimum cooldown)
+   *
+   * **THIS IS A NO-OP IF THE TIMER IS NOT CURRENTLY RUNNING**
+   * @returns Array of fields that should be marked as changed
+   */
+  truncateSwapBlockTimer(): (keyof RaceStateOverview)[] {
+    if(this.swapBlockTimer) {
+      this.swapBlockedUntil = this.lastSwapTimestamp + MINIMUM_COOLDOWN_MILLIS;
+      this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
+      return ["swapBlockedUntil"];
+    }
+    return [];
   }
 
   __serialize(): RaceStateData {
@@ -327,8 +335,10 @@ export default class RaceState {
       this.doRaceCompletedActions();
     }
     // If the current game was marked as completed, swap game
+    // immediately
     else if(completedGame === this.currentGame) {
-      this.swapGameIfPossible(1, "participants", "games");
+      const stateChanges = this.truncateSwapBlockTimer();
+      this.swapGameIfPossible(1,  ...stateChanges, "participants", "games");
     }
     // Otherwise, just push an update about the completion and score
     else {
