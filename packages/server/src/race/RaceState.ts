@@ -67,7 +67,7 @@ export default class RaceState {
       this.swapQueueSize = args.swapQueueSize;
       this.swapBlockedUntil = args.swapBlockedUntil;
       this.lastSwapTimestamp = args.lastSwapTimestamp;
-      if(this.swapQueueSize) {
+      if(this.swapQueueSize && this.phase === "ACTIVE") {
         this.swapBlockTimer = this.startSwapBlockTimer(args.swapBlockedUntil);
       }
     }
@@ -206,9 +206,24 @@ export default class RaceState {
     }
     this.phase = phase;
 
+    // First start of the race. Swap to a game
     if(phase === "ACTIVE" && !this.currentGame) {
       this.swapGameIfPossible(1, "phase");
     }
+    // Start a race that's been paused (or ended). Start the swap timer
+    if(phase === "ACTIVE" && this.currentGame) {
+      this.swapBlockedUntil = this.generateSwapBlockUntil();
+      this.swapBlockTimer = this.startSwapBlockTimer(this.swapBlockedUntil);
+      this.updateState("phase", "swapBlockedUntil");
+    }
+    // Pause / end a race. Stop the swap timer
+    else if (phase === "PAUSED" || phase === "ENDED") {
+      clearTimeout(this.swapBlockTimer);
+      this.swapBlockTimer = undefined;
+      this.swapBlockedUntil = 0;
+      this.updateState("phase", "swapBlockedUntil");
+    }
+    // Fallback case
     else {
       this.updateState("phase");
     }
@@ -420,6 +435,10 @@ export default class RaceState {
       // Otherwise, just send a state update
       if(this.phase==="ACTIVE") {
         this.swapGameIfPossible(eventData.length, "swapEventData");
+      }
+      else if (this.phase === "PAUSED") {
+        this.swapQueueSize += eventData.length;
+        this.updateState("swapEventData", "swapQueueSize");
       }
       else {
         this.updateState("swapEventData");
