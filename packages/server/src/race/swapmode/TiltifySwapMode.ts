@@ -23,8 +23,8 @@ export class TiltifySwapMode implements SwapMode{
           // One swap for 1€, then an extra swap every 2€, to a max of 20 swaps
           // Floor(donation amount), to remove cents
           // Ceil(amount/2), to get (1 or 2 = 1), (3 or 4 = 2), (5 or 6 = 3) and so on
-          // Min(sum,20), to get at most 20 swaps
-          const count = Math.min(Math.ceil(Math.floor(event.amount.value) / 2), 20);
+          // Min(sum,50), to get at most 50 swaps
+          const count = Math.min(Math.ceil(Math.floor(event.amount.value) / 2), 50);
           const events = new Array<string>();
           for(let i = 1; i <= count; i++) {
             events.push(info + ` (${i}/${count})`);
